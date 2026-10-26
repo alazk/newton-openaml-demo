@@ -659,3 +659,239 @@ a {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   OpenAML demo: page, hero, tagline and motion.
+
+   Motion follows newton-demo-motion: elements rise from below and resolve
+   from blur to sharp, staggered in reading order. Transforms on --oa-e,
+   opacity and blur on --oa-e2. Only transform, opacity and filter animate.
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --oa-e: cubic-bezier(0.22, 1, 0.36, 1);
+  --oa-e2: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+.oa-page {
+  width: 100%;
+  background: var(--surface);
+}
+
+/* ── Floating glass nav ─────────────────────────────────── */
+.oa-nav {
+  position: fixed;
+  top: 16px;
+  /* Centred with auto margins. left: 50% plus a transform gives the bar only
+     half the viewport to lay out in, which pushed the logo out on phones. */
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 8px 8px 20px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--ink) 10%, transparent);
+  background: color-mix(in srgb, #ffffff 72%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent),
+    0 8px 24px color-mix(in srgb, var(--ink) 6%, transparent);
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .oa-nav {
+    top: 12px;
+    gap: 10px;
+    padding: 6px 6px 6px 14px;
+  }
+  .oa-nav-cta {
+    display: none !important;
+  }
+}
+
+/* ── Sections ───────────────────────────────────────────── */
+.oa-wrap {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 48px);
+}
+
+.oa-hero {
+  min-height: min(100dvh, 960px);
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 48px;
+  padding-top: 120px;
+  padding-bottom: 64px;
+}
+@media (max-width: 1023px) {
+  .oa-hero {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+    gap: 40px;
+    padding-top: 104px;
+  }
+}
+
+.oa-h1 {
+  margin: 0;
+  max-width: 680px;
+  font-size: clamp(2.75rem, 1.5rem + 4.2vw, 4.5rem);
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  /* The one gradient: on the hero heading text, never on a background. */
+  background: linear-gradient(90deg, #0e0e0f 0%, #6b6b6c 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  padding-bottom: 0.06em; /* descenders stay inside the clipped box */
+}
+
+.oa-lead {
+  margin: 24px 0 0;
+  max-width: 560px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--body);
+  text-wrap: pretty;
+}
+
+.oa-tagline {
+  margin: 0;
+  max-width: 900px;
+  font-size: clamp(2rem, 1.1rem + 2.8vw, 3.25rem);
+  line-height: 1.14;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+.oa-word {
+  color: var(--ink);
+  opacity: 0.22;
+  transition: opacity 600ms var(--oa-e);
+}
+.oa-word.is-lit {
+  opacity: 1;
+}
+
+/* The stage keeps the console's fixed height on desktop, so a verdict never
+   scrolls; on a phone it becomes part of the document. */
+.oa-stage {
+  position: relative;
+  /* Room for the nav and the section heading above it, so the whole card
+     fits on screen after "Check a wallet" scrolls here. */
+  height: clamp(600px, calc(100dvh - 190px), 820px);
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
+  background: var(--surface);
+  overflow: hidden;
+  scroll-margin-top: 88px; /* clear the floating nav */
+  display: flex;
+  flex-direction: column;
+  outline: none;
+}
+@media (max-width: 640px), (max-height: 700px) {
+  .oa-stage {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+  .oa-stage > * {
+    overflow: visible !important;
+  }
+}
+
+/* ── Scroll-triggered entrances (added once by IntersectionObserver) ── */
+.oa-in,
+.oa-card {
+  opacity: 0;
+  transition:
+    transform 1.05s var(--oa-e),
+    opacity 0.75s var(--oa-e2),
+    filter 0.75s var(--oa-e2);
+  transition-delay: var(--d, 0s);
+}
+.oa-in {
+  transform: translateY(10px);
+  filter: blur(4px);
+}
+.oa-card {
+  transform: translateY(24px) scale(0.985);
+  filter: blur(6px);
+}
+.oa-on .oa-in,
+.oa-on .oa-card,
+.oa-on.oa-in,
+.oa-on.oa-card {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* ── Mount animations (verdict, running state) ──────────── */
+@keyframes oaRise {
+  from { opacity: 0; transform: translateY(10px); filter: blur(4px); }
+}
+@keyframes oaHead {
+  from { opacity: 0; transform: translateY(14px); filter: blur(10px); }
+}
+@keyframes oaPop {
+  from { opacity: 0; transform: scale(0.86); filter: blur(4px); }
+}
+@keyframes oaLeft {
+  from { opacity: 0; transform: translateX(-10px); filter: blur(4px); }
+}
+@keyframes oaCardIn {
+  from { opacity: 0; transform: translateY(24px) scale(0.985); filter: blur(6px); }
+}
+.oa-rise { animation: oaRise 0.9s var(--oa-e) both; animation-delay: var(--d, 0s); }
+.oa-head { animation: oaHead 1s var(--oa-e) both; animation-delay: var(--d, 0s); }
+.oa-pop { animation: oaPop 0.7s var(--oa-e) both; animation-delay: var(--d, 0s); }
+.oa-left { animation: oaLeft 0.8s var(--oa-e) both; animation-delay: var(--d, 0s); }
+.oa-card-in { animation: oaCardIn 0.9s var(--oa-e) both; animation-delay: var(--d, 0s); }
+
+/* Hairline that the flow diagram's pulses ride; marches while checking. */
+@keyframes oaMarch {
+  to { stroke-dashoffset: -16; }
+}
+.oa-march {
+  stroke-dasharray: 4 4;
+  animation: oaMarch 1.2s linear infinite;
+}
+
+.oa-flow-tall { display: none; }
+@media (max-width: 640px) {
+  .oa-flow-wide { display: none; }
+  .oa-flow-tall { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oa-in,
+  .oa-card {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+  .oa-rise,
+  .oa-head,
+  .oa-pop,
+  .oa-left,
+  .oa-card-in,
+  .oa-march {
+    animation: none;
+  }
+  .oa-word {
+    opacity: 1;
+    transition: none;
+  }
+}

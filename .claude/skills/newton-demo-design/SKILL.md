@@ -7,7 +7,7 @@ description: Visual and copy rules for building or restyling any Newton demo, th
 
 The system the Newton Protocol demos share (sanctions, Lazarus Scan, Pool Guard, OpenAML). It comes from the Newton Explorer token contract used in Lazarus Scan (`design/tokens.css`) and the sanctions demo's `DESIGN-SYSTEM.md`, plus a few rules borrowed from `landing-page-design` in [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) (MIT).
 
-The demos are educational. Their job is to make one Newton Protocol decision legible: what was checked, against what data, who signed it, and what happens next. They are not landing pages, so conversion patterns (free trials, risk reversal, testimonial walls, scroll-reveal taglines, gradient headlines) do not apply.
+The demos are educational. Their job is to make one Newton Protocol decision legible: what was checked, against what data, who signed it, and what happens next. Each demo opens like a polished landing page (glass nav, gradient hero, an animated diagram, a tagline that lights up as you scroll) and then hands over to the working console. Conversion patterns (free trials, pricing, risk reversal, testimonial walls) do not apply. The reference build is the OpenAML demo (`components/Demo.tsx`, `components/CheckFlow.tsx`).
 
 When a rule here conflicts with a framework default or another design skill, this file wins. When the user's explicit request conflicts with a rule, the user wins. When restyling an existing demo, read its own tokens file first; if it differs from this one, ask which wins before changing it.
 
@@ -19,7 +19,7 @@ When a rule here conflicts with a framework default or another design skill, thi
 
 ## 2. Colour
 
-Flat colours only. No background gradients.
+Flat colours only. No background gradients. The one gradient is on the hero headline text: left to right `#0E0E0F` to `#6B6B6C`, clipped to the text.
 
 **Neutrals**
 
@@ -34,7 +34,7 @@ Flat colours only. No background gradients.
 | sunken | `#F5F5F6` | Field fills, segmented control track, hover |
 | surface | `#FFFFFF` | Cards, inputs |
 | bone | `#FBFCFE` | Page background where a demo uses one |
-| frame outline | `1px solid` ink at 14% | Masthead and cards |
+| frame outline | `1px solid` ink at 14% | Cards and the stage |
 
 **Outcome tones** (text on wash; the edge colour is for borders and dots)
 
@@ -56,17 +56,19 @@ Suisse Intl is the licensed brand face; **Inter** stands in until it is licensed
 
 | Role | Size | Weight | Line height | Tracking | Use |
 |---|---|---|---|---|---|
-| display | `clamp(1.5rem, 1.2rem + 1.5vw, 1.75rem)` (24–28) | 500 | 1.15 | -0.015em | Verdict headline only |
+| hero | `clamp(2.75rem, 1.5rem + 4.2vw, 4.5rem)` (44–72) | 500 | 1.02 | -0.035em | Hero headline only, gradient text |
+| tagline | `clamp(2rem, 1.1rem + 2.8vw, 3.25rem)` (32–52) | 500 | 1.14 | -0.025em | The tagline reveal section |
+| display | `clamp(1.5rem, 1.2rem + 1.5vw, 1.75rem)` (24–28) | 500 | 1.15 | -0.015em | Verdict and running-state headline |
 | title | `clamp(1.125rem, 1rem + 0.6vw, 1.25rem)` (18–20) | 500 | 1.2 | -0.01em | Page title |
 | heading | 18px | 500 | 1.25 | -0.01em | Card heading |
 | lead | 16px | 400 | 1.45 | 0 | Verdict reason, intro body |
 | body | 14px | 400 | 1.45 | 0 | Default body |
 | ui | 14px | 500 | 1.4 | 0 | Buttons, labels, row titles |
 | caption | 12px | 400 | 1.4 | 0 | Metadata, hints |
-| eyebrow | 12px | 500 | 1.4 | 0.08em uppercase | Section labels, masthead lockup |
+| eyebrow | 12px | 500 | 1.4 | 0.08em uppercase | Section labels, nav lockup |
 | data | 14px mono | 400 | 1.45 | 0 | Addresses, hashes |
 
-- Labels are sentence case at 14px. Uppercase tracking only in the masthead lockup and eyebrows.
+- Labels are sentence case at 14px. Uppercase tracking only in the nav lockup and eyebrows.
 - A timestamp is set in sans, not mono, so it does not compete with addresses.
 - `text-wrap: balance` on headings, `text-wrap: pretty` on body, so no single word sits alone on a last line.
 - Cap measure: 44ch for the verdict reason, 64ch for detail text.
@@ -77,20 +79,32 @@ Suisse Intl is the licensed brand face; **Inter** stands in until it is licensed
 
 **Sizes:** touch target 44px, control 40px, small control 32px, large control 48px, address field 48px, icons 16 or 18px.
 
-**Radius:** 12px controls (inputs, segments), 16px surfaces (cards, masthead, stage), 999px pill (buttons, chips, badges).
+**Radius:** 12px controls (inputs, segments), 16px surfaces (cards, stage), 999px pill (nav, buttons, chips, badges).
 
 - **Nested radius:** when a shape sits inside another with a gap under 32px, inner radius = outer radius minus the gap (only if the result is above 2).
 - Borders are 1px, all the way round or not at all. Never on one side of a card.
 
-**Horizontal inset:** `clamp(24px, 4vw, 48px)`, used by the masthead and every stage panel, so everything sits on one left line and one right line.
+**Horizontal inset:** `clamp(24px, 4vw, 48px)` inside every stage panel (console, running, verdict), so their contents share one left line and one right line.
 
 ## 5. Layout
 
-**Shell:** max 1440px, centred, padding 16 / 20 / 24 at phone / 640 / 1024, gap 12 / 16 / 24. Desktop is a console (`height: 100dvh`, no page scroll); below 700px tall or 640px wide it becomes a document and scrolls. Clipping a verdict is worse than scrolling to it.
+**Page, top to bottom:** floating nav, hero, tagline, the check section, footer. Sections sit in a 1440px column with `clamp(16px, 4vw, 48px)` side padding.
 
-**Masthead (a card):** Newton logo (`public/newton-logo.svg`, 18px tall, goes home on click), then a black pill lockup with the demo name in uppercase eyebrow type. On the right a status pill: pulsing dot plus "Sepolia". The status pill turns caution colour when data is stale and says how old.
+**Floating glass nav:** fixed 16px from the top, centred with auto margins and `width: max-content` (never `left: 50%` plus a transform, which halves the width it can lay out in and pushes the logo out on phones). Pill shape, white at 72% over `backdrop-filter: blur(16px) saturate(1.4)`, 1px ink-at-10% border, soft shadow. Contents: Newton logo (`public/newton-logo.svg`, 18px, back to top), black pill lockup with the demo name, pulsing dot plus "Sepolia" (caution colour and the age when data is stale), and a small primary "Check a wallet" button that scrolls to the check (hidden on phones).
 
-**Stage:** one element that changes state. At rest it holds the console; while checking, the console with a running button; at the end, the verdict. It never swaps to a new screen or drops in like a modal.
+**Hero:** two columns from 1024px. Left: eyebrow ("A Newton Protocol demo"), gradient headline (max 680px, balanced), one lead paragraph (18px, 560px) naming the data, its size and who signs, one primary button that scrolls to the check, then the real tier or list counts as tone-coloured chips. Right: a bone card with an eyebrow ("What happens on every check") and the animated check diagram, captioned underneath. Top padding clears the nav (120px desktop, 104px below 1024).
+
+**Tagline reveal:** its own section between the hero and the check, at least two lines, a benefit statement in plain words. Words start at 22% opacity and light up one at a time in reading order as the paragraph scrolls through the viewport (progress from its top at 85% of the viewport to its bottom at 55%), on a `requestAnimationFrame`-throttled scroll listener. The full sentence is the `aria-label`; the word spans are `aria-hidden`.
+
+**Check section:** eyebrow "Try it", heading "Check a transfer", then the stage card.
+
+**Stage:** one bordered card (16px radius) that changes state: the console at rest, the running state while operators check, the verdict at the end. It never swaps to a new screen or drops in like a modal. On desktop its height is `clamp(600px, calc(100dvh - 190px), 820px)`, so after "Check a wallet" scrolls to it the whole card fits under the nav and a verdict never scrolls. On phones (or below 700px tall) it becomes part of the page; when its state changes and its top is under the nav, scroll it back into view (`scroll-margin-top: 88px`).
+
+**Running state:** display headline "Checking the transfer", one paragraph saying what is happening (who checks, against what, that the rules run at once and are signed on Sepolia), then the check diagram at running speed. Never a percentage or a step counter: the diagram shows the order of events, not live progress.
+
+**Check diagram:** boxes for the transfer (short address), Newton Protocol operators (four dots), the data source with its version or commit, and the verdict signed on Sepolia, joined by hairlines with marching dashes. Pulses travel transfer to operators, out to the data and back, then to the verdict; boxes outline in ink as a pulse reaches them; operator dots light in turn. SVG `animateMotion` (no JS clock), 5.2s loop in the hero, 3.2s while checking. A wide layout from 640px and a stacked one below. Every box must be true of the deployed policy.
+
+**Footer:** one line of caption type above a hairline: the network, the data source with commit and licence, and the repo.
 
 **Console:** two columns from 1024px, one below. Left: the active policy card (name, one plain paragraph on what it checks and who enforces it, the rules, the data source with version or commit and licence). Right: the transfer (labelled field, sample picks as a segmented control, a hint line, the primary action). Headings on both columns share one fixed-height row so they line up.
 
@@ -107,11 +121,11 @@ party (full address, Copy) · Decided (timestamp)
 
 Nothing sits above the headline. Detail never rearranges the verdict. The address is shown whole, never truncated, because people screenshot this panel as the record.
 
-**Breakpoints:** 640 / 768 / 1024 (Tailwind). Below 640 the shell becomes a document, segments wrap into rows, parties stack, buttons go full width.
+**Breakpoints:** 640 / 768 / 1024 (Tailwind). Below 1024 the hero and console stack. Below 640 the stage becomes part of the page, the nav drops its button, the diagram switches to its stacked layout, segments wrap into rows, parties stack, buttons go full width.
 
 ## 6. Components
 
-- **Primary button:** pill, ink fill, white `ui` text, 44px tall. Disabled is the sunken fill with disabled text, never a grey slab. While a check runs it stays dark with a light sweep band, and says what is happening ("Operators are checking the transfer…").
+- **Primary button:** pill, ink fill, white `ui` text, 44px tall (48px and 16px text in the hero, 36px in the nav). Disabled is the sunken fill with disabled text, never a grey slab. While a check runs it stays dark with a light sweep band, and says what is happening ("Operators are checking the transfer…").
 - **Outline button:** pill, 1px hairline, ink text, hover to sunken fill.
 - **Field:** visible label above (not just a placeholder), white fill, 1px disabled-grey border, 12px radius, mono text. Truncated to `0x1234…5678` at rest, whole on focus. Error: deny-colour border and an inline message.
 - **Segmented picks (radio group):** sunken track with 4px padding; selected option is a white raised pill with `0 1px 2px` ink at 14%. Arrow keys move, only the selected option is tabbable.
@@ -132,18 +146,26 @@ Every interactive element ships with all of these:
 
 ## 8. Motion
 
-Curve `--ease-newton: cubic-bezier(0.22, 1, 0.36, 1)`. Interaction 300ms, emphasis 600ms, stagger 60ms. Never a browser default curve.
+Curve `--ease-newton: cubic-bezier(0.22, 1, 0.36, 1)` for transforms, `cubic-bezier(0.33, 1, 0.68, 1)` for opacity and blur. Interaction 300ms. Never a browser default curve. Everything enters by rising from below and resolving from blur to sharp, staggered in reading order (the `newton-demo-motion` choreography, live on the page).
 
-| Effect | Spec |
+| Kind | From | Duration |
+|---|---|---|
+| `up` (text, rows, buttons) | `translateY(10px)`, `blur(4px)`, opacity 0 | 1.05s transform, 0.75s opacity and blur |
+| `card` (cards, the stage, the hero diagram) | `translateY(24px)`, `scale(0.985)`, `blur(6px)`, opacity 0 | same |
+| `head` (verdict and running headlines) | `translateY(14px)`, `blur(10px)`, opacity 0 | 1s |
+| `pop` (chips) | `scale(0.86)`, `blur(4px)`, opacity 0 | 0.7s |
+| `left` (verdict rule rows) | `translateX(-10px)`, `blur(4px)`, opacity 0 | 0.8s |
+
+| Where | Sequence |
 |---|---|
-| Verdict wash | `clip-path: inset(0 100% 0 0)` to `inset(0)`, 0.66s. Clipped, never scaled |
-| Headline reveal | Same clip, 0.6s, 0.16s behind the wash |
-| Sequence | Reason, chips, rows, parties rise 6px and fade in reading order, 0.34s to 0.7s delays |
-| Console rise | 6px rise and fade, 0.34s |
-| Sweep | Light band across a loading surface, 2.6s loop |
-| Pulse | Status dot opacity 1 to 0.3 to 1, 1.8s |
+| Hero, on load | eyebrow 0.05s, headline 0.13s, lead 0.22s, button 0.31s, diagram card 0.3s, chips 0.4s |
+| Check section, once 25% visible (`IntersectionObserver`) | heading, stage card 0.1s, policy card 0.24s, transfer card 0.33s |
+| Verdict, on mount | headline, reason 0.12s, "Listed by" 0.24s, chips from 0.32s every 0.08s, note 0.38s, rule rows 0.46s and 0.54s, actions 0.64s, parties 0.72s |
+| Running, on mount | headline, paragraph 0.12s, diagram 0.2s |
 
-Animate only `transform`, `opacity` and `clip-path`. `prefers-reduced-motion: reduce` turns all of it off and clears `clip-path` explicitly, or a cancelled clip leaves the element hidden. For videos and GIFs of a demo, use the `newton-demo-motion` skill.
+Status dot pulses (opacity 1 to 0.3, 1.8s); the primary button carries a light sweep band while busy.
+
+Animate only `transform`, `opacity`, `filter` and `clip-path`; animated blur stays at 10px or less. `prefers-reduced-motion: reduce` shows every element in its final state from the first frame, lights every tagline word, pauses the diagram (`svg.pauseAnimations()`), and uses instant scrolling. For videos and GIFs of a demo, use the `newton-demo-motion` skill.
 
 ## 9. Copy
 
@@ -176,13 +198,15 @@ These are the closest the demos get to marketing, and still not landing pages.
 - [ ] No dead links; every external link opens the real attestation, explorer or source
 - [ ] `frame-ancestors 'none'`, `X-Frame-Options: DENY`, `nosniff`, no `X-Powered-By`
 - [ ] Rate limits on any route that submits a paid task; fixed visitor-facing error text
-- [ ] Phone check at 390×844 and desktop at 1440×900: nothing clipped, headings aligned, verdict readable without scrolling on desktop
+- [ ] Phone check at 390×844 and desktop at 1440×900: nothing clipped, headings aligned, nav logo visible on phones, verdict readable without scrolling on desktop
+- [ ] Frames captured mid-animation (hero entering, tagline half lit, running, verdict landing) and with reduced motion
 - [ ] Every verdict state rendered and looked at: allowed, each deny reason, review if the demo has it, no decision, error
 
 ## 12. Quick check before handing over
 
 - [ ] Only the tokens above; no new colours, sizes or radii
 - [ ] Deny is brand red `#9F3619` on `#F8EAE4`; fail-closed is grey
+- [ ] Glass nav, gradient hero, tagline reveal, blur-in entrances and the check diagram present; the diagram matches the deployed policy
 - [ ] Inter plus JetBrains Mono, weights 400 and 500, no italics
 - [ ] Verdict panel order kept; address whole; timestamp present
 - [ ] Unreadable responses show "No decision"
@@ -190,4 +214,4 @@ These are the closest the demos get to marketing, and still not landing pages.
 
 ## Credits
 
-The states, ship checklist, nested radius and one-sided border rules adapt `landing-page-design` from [ai-design-skills](https://github.com/elayadesign/ai-design-skills) by Elaya, MIT licensed.
+The hero, glass nav, tagline reveal, states, ship checklist, nested radius and one-sided border rules adapt `landing-page-design` from [ai-design-skills](https://github.com/elayadesign/ai-design-skills) by Elaya, MIT licensed.

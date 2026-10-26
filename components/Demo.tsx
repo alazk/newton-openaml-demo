@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import CheckFlow from "@/components/CheckFlow";
 import { C, H, R, SP, T, BORDER, INSET_X } from "@/lib/ds";
 import {
   BLOCK_TIERS,
@@ -63,14 +64,24 @@ export default function Demo() {
   const [pick, setPick] = useState<Pick>(null);
   const [focused, setFocused] = useState(false);
   const [run, setRun] = useState<Run>({ status: "idle" });
-  const stageRef = useRef<HTMLElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const checkRef = useRef<HTMLElement>(null);
+  const checkOn = useReveal(checkRef);
 
   const valid = isAddress(to);
   const busy = run.status === "running";
   const ready = valid && !busy;
 
   useEffect(() => {
-    if (run.status === "done") stageRef.current?.focus();
+    const stage = stageRef.current;
+    if (!stage) return;
+    if (run.status === "done") stage.focus({ preventScroll: true });
+    // On a phone the stage is part of the page: when it changes state, bring
+    // its top back below the floating nav instead of leaving it under it.
+    if ((run.status === "running" || run.status === "done") && stage.getBoundingClientRect().top < 80) {
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      stage.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    }
   }, [run.status]);
 
   function onTo(v: string) {
@@ -106,95 +117,331 @@ export default function Demo() {
     setRun({ status: "idle" });
   }
 
+  function goToCheck() {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("check")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  }
+
   return (
-    <div className="pe-shell" style={{ background: C.surface }}>
-      <Masthead onHome={reset} />
-      <main
-        id="main"
-        ref={stageRef}
-        className="pe-stage"
-        tabIndex={-1}
-        role={run.status === "idle" ? undefined : "status"}
-        aria-live={run.status === "idle" ? undefined : "polite"}
-        aria-atomic={run.status === "idle" ? undefined : true}
-        style={{ position: "relative", flex: 1, minHeight: 0, overflow: "hidden", outline: "none", display: "flex", flexDirection: "column" }}
-      >
-        {run.status === "done" ? (
-          <Decision result={run.result} stale={Boolean(run.stale)} onReset={reset} />
-        ) : (
-          <Console
-            to={to}
-            focused={focused}
-            setFocused={setFocused}
-            onTo={onTo}
-            pick={pick}
-            onPick={onPick}
-            ready={ready}
-            busy={busy}
-            valid={valid}
-            error={run.status === "error" ? run.message : null}
-            onCheck={check}
-          />
-        )}
+    <div className="oa-page">
+      <Nav
+        onHome={() => {
+          reset();
+          window.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+        }}
+        onCheck={goToCheck}
+      />
+      <main id="main">
+        <Hero onCheck={goToCheck} />
+        <Tagline />
+
+        <section
+          id="check"
+          ref={checkRef}
+          aria-labelledby="check-title"
+          className={`oa-wrap ${checkOn ? "oa-on" : ""}`}
+          style={{ paddingTop: SP.x6, paddingBottom: SP.x8, scrollMarginTop: 88 }}
+        >
+          <div className="oa-in" style={{ marginBottom: SP.x3 }}>
+            <Eyebrow>Try it</Eyebrow>
+            <h2 id="check-title" style={{ margin: `${SP.x1}px 0 0`, fontFamily: SANS, ...T.h2, color: C.ink }}>
+              Check a transfer
+            </h2>
+          </div>
+
+          <div
+            ref={stageRef}
+            className="oa-stage oa-card pe-stage"
+            style={{ ["--d" as string]: "0.1s" }}
+            tabIndex={-1}
+            role={run.status === "idle" ? undefined : "status"}
+            aria-live={run.status === "idle" ? undefined : "polite"}
+            aria-atomic={run.status === "idle" ? undefined : true}
+          >
+            {run.status === "done" ? (
+              <Decision result={run.result} stale={Boolean(run.stale)} onReset={reset} />
+            ) : busy ? (
+              <Running to={to} />
+            ) : (
+              <Console
+                to={to}
+                focused={focused}
+                setFocused={setFocused}
+                onTo={onTo}
+                pick={pick}
+                onPick={onPick}
+                ready={ready}
+                busy={busy}
+                valid={valid}
+                error={run.status === "error" ? run.message : null}
+                onCheck={check}
+              />
+            )}
+          </div>
+        </section>
       </main>
+      <Footer />
     </div>
   );
 }
 
-/* ── Masthead ───────────────────────────────────────────── */
+/** Adds the entrance once, when about a quarter of the element is in view. */
+function useReveal(ref: React.RefObject<Element | null>, threshold = 0.25): boolean {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || on) return;
+    if (!("IntersectionObserver" in window)) {
+      setOn(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setOn(true);
+          io.disconnect();
+        }
+      },
+      { threshold },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [ref, on, threshold]);
+  return on;
+}
 
-function Masthead({ onHome }: { onHome: () => void }) {
+function Eyebrow({ children }: { children: React.ReactNode }) {
   return (
-    <header
-      className="pe-mast"
-      style={{
-        flexShrink: 0,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: SP.x3,
-        padding: `${SP.x1_5}px ${INSET_X}`,
-        background: C.surface,
-        border: `1px solid color-mix(in srgb, ${C.ink} 14%, transparent)`,
-        borderRadius: R.xl,
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: SP.x2 }}>
-        <button type="button" onClick={onHome} className="pe-reset" aria-label="Start a new check" title="Start a new check" style={{ display: "block", lineHeight: 0 }}>
-          <img src="/newton-logo.svg" alt="Newton" style={{ height: 18, display: "block" }} />
-        </button>
-        <span
-          style={{
-            background: C.ink,
-            color: C.surface,
-            fontFamily: SANS,
-            ...T.monoSm,
-            fontWeight: 500,
-            letterSpacing: "0.14em",
-            textTransform: "uppercase",
-            borderRadius: R.pill,
-            padding: `${SP.x1}px ${SP.x2}px`,
-          }}
-        >
-          OpenAML
-        </span>
-      </div>
-      <div
+    <span style={{ fontFamily: SANS, fontSize: 12, lineHeight: 1.4, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: C.muted }}>
+      {children}
+    </span>
+  );
+}
+
+/* ── Nav: compact, floating, glass ──────────────────────── */
+
+function Nav({ onHome, onCheck }: { onHome: () => void; onCheck: () => void }) {
+  return (
+    <header className="oa-nav">
+      <button type="button" onClick={onHome} className="pe-reset" aria-label="Back to the top" style={{ display: "block", lineHeight: 0 }}>
+        <img src="/newton-logo.svg" alt="Newton" style={{ height: 18, display: "block" }} />
+      </button>
+      <span
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 9,
-          height: H.chip,
-          border: `${BORDER}px solid ${C.hairline}`,
+          background: C.ink,
+          color: C.surface,
+          fontFamily: SANS,
+          ...T.monoSm,
+          fontWeight: 500,
+          letterSpacing: "0.14em",
+          textTransform: "uppercase",
           borderRadius: R.pill,
-          padding: `0 ${SP.x2}px`,
-          background: C.surface,
+          padding: `6px ${SP.x1_5}px`,
         }}
       >
+        OpenAML
+      </span>
+      <span style={{ display: "flex", alignItems: "center", gap: SP.x1, paddingInline: SP.half }} title="Verdicts are signed on Ethereum Sepolia">
         <span className="pe-pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: C.pass, display: "block" }} />
         <span style={{ ...label(), color: C.ink }}>Sepolia</span>
-      </div>
+      </span>
+      <button
+        type="button"
+        onClick={onCheck}
+        className="pe-reset pe-dark oa-nav-cta"
+        style={{ height: 36, padding: `0 ${SP.x2}px`, borderRadius: R.pill, ...label(), display: "inline-flex", alignItems: "center" }}
+      >
+        Check a wallet
+      </button>
     </header>
+  );
+}
+
+/* ── Hero ───────────────────────────────────────────────── */
+
+const HERO_ADDRESS = "0x57a7…ff80"; // a real OpenAML Fraud sample (SAMPLES.fraud)
+
+function Hero({ onCheck }: { onCheck: () => void }) {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setOn(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  return (
+    <section className={`oa-wrap oa-hero ${on ? "oa-on" : ""}`} aria-labelledby="hero-title">
+      <div>
+        <div className="oa-in" style={{ ["--d" as string]: "0.05s" }}>
+          <Eyebrow>A Newton Protocol demo</Eyebrow>
+        </div>
+        <h1 id="hero-title" className="oa-h1 oa-in" style={{ ["--d" as string]: "0.13s", marginTop: SP.x2, fontFamily: SANS }}>
+          Check a wallet before you pay it.
+        </h1>
+        <p className="oa-lead oa-in" style={{ ["--d" as string]: "0.22s", fontFamily: SANS }}>
+          This demo screens a transfer against {fmt(TOTAL_ADDRESSES)} addresses labeled by OpenAML, the open source AML
+          project at FINOS. Newton Protocol operators run the check and sign the result on Ethereum Sepolia before the
+          transfer executes.
+        </p>
+        <div className="oa-in" style={{ ["--d" as string]: "0.31s", marginTop: SP.x4 }}>
+          <button
+            type="button"
+            onClick={onCheck}
+            className="pe-reset pe-dark"
+            style={{ height: H.field, padding: `0 ${SP.x3}px`, borderRadius: R.pill, fontFamily: SANS, fontSize: 16, fontWeight: 500, display: "inline-flex", alignItems: "center" }}
+          >
+            Check a wallet
+          </button>
+        </div>
+        <div className="oa-in" style={{ ["--d" as string]: "0.4s", marginTop: SP.x5 }}>
+          <span style={{ ...small(), color: C.muted }}>OpenAML tiers in this demo</span>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: SP.x1, marginTop: SP.x1 }}>
+            {(["sanctioned", "blocked", "fraud", "flagged"] as Tier[]).map((t) => {
+              const block = BLOCK_TIERS.includes(t);
+              return (
+                <span
+                  key={t}
+                  style={{
+                    ...small(),
+                    borderRadius: R.pill,
+                    padding: `${SP.half}px ${SP.x1_5}px`,
+                    background: block ? C.flagWash : C.cautionWash,
+                    color: block ? C.flagText : C.caution,
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {TIER_INFO[t].name} · {fmt(TIER_COUNTS[t])}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <figure className="oa-card" style={{ ["--d" as string]: "0.3s", margin: 0 }}>
+        <div
+          style={{
+            border: `1px solid color-mix(in srgb, ${C.ink} 14%, transparent)`,
+            borderRadius: R.lg,
+            background: C.bone,
+            padding: `${SP.x3}px ${SP.x3}px ${SP.x4}px`,
+          }}
+        >
+          <Eyebrow>What happens on every check</Eyebrow>
+          <div style={{ marginTop: SP.x3 }}>
+            <CheckFlow address={HERO_ADDRESS} />
+          </div>
+        </div>
+        <figcaption style={{ ...small(), color: C.muted, marginTop: SP.x1_5, maxWidth: "60ch" }}>
+          Every operator reads OpenAML&apos;s lists at the same pinned commit, so they all check against the same data.
+        </figcaption>
+      </figure>
+    </section>
+  );
+}
+
+/* ── Tagline: words light up as they cross a line ───────── */
+
+const TAGLINE =
+  "OpenAML labels the wallets. Newton Protocol checks each transfer against those labels, and a quorum of operators signs the answer before anything moves.";
+
+function Tagline() {
+  const ref = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const words = Array.from(el.querySelectorAll<HTMLSpanElement>(".oa-word"));
+    let frame = 0;
+    // Progress runs from 0 when the paragraph's top reaches 85% of the
+    // viewport to 1 when its bottom reaches 55%. Words light in reading
+    // order as it grows, one at a time, never a whole line at once.
+    const update = () => {
+      frame = 0;
+      const r = el.getBoundingClientRect();
+      const vh = window.innerHeight;
+      const start = vh * 0.85;
+      const end = vh * 0.55 - r.height;
+      const progress = Math.min(1, Math.max(0, (start - r.top) / (start - end)));
+      const lit = Math.round(progress * words.length);
+      words.forEach((w, i) => w.classList.toggle("is-lit", i < lit));
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  return (
+    <section className="oa-wrap" style={{ paddingBlock: "clamp(64px, 12vh, 140px)" }}>
+      <p ref={ref} className="oa-tagline" style={{ fontFamily: SANS }} aria-label={TAGLINE}>
+        {TAGLINE.split(" ").map((w, i) => (
+          <span key={i} aria-hidden>
+            <span className="oa-word">{w}</span>{" "}
+          </span>
+        ))}
+      </p>
+    </section>
+  );
+}
+
+/* ── Running: the diagram plays while operators check ───── */
+
+function Running({ to }: { to: string }) {
+  return (
+    <div
+      style={{
+        flex: 1,
+        width: "100%",
+        maxWidth: 880,
+        marginInline: "auto",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        gap: SP.x5,
+        padding: `${SP.x5}px ${INSET_X}`,
+      }}
+    >
+      <div>
+        <div className="oa-head" style={{ fontFamily: SANS, ...T.h1, color: C.ink }}>
+          Checking the transfer
+        </div>
+        <p className="oa-rise" style={{ ["--d" as string]: "0.12s", margin: `${SP.x2}px 0 0`, fontFamily: SANS, ...T.valueLg, color: C.body, maxWidth: "56ch" }}>
+          Newton Protocol operators are checking this recipient against OpenAML&apos;s lists. The block rule and the review
+          rule run at the same time, and each result is signed on Ethereum Sepolia.
+        </p>
+      </div>
+      <div className="oa-card-in" style={{ ["--d" as string]: "0.2s" }}>
+        <CheckFlow address={`${to.slice(0, 6)}…${to.slice(-4)}`} speed="running" />
+      </div>
+    </div>
+  );
+}
+
+/* ── Footer ─────────────────────────────────────────────── */
+
+function Footer() {
+  const link: React.CSSProperties = { textDecoration: "underline", textUnderlineOffset: 3 };
+  return (
+    <footer className="oa-wrap" style={{ paddingBlock: SP.x4, borderTop: `1px solid ${C.hairline}` }}>
+      <p style={{ margin: 0, ...small(), color: C.muted, lineHeight: 1.7 }}>
+        A Newton Protocol demo on Ethereum Sepolia. Data:{" "}
+        <a href={`${OPENAML_REPO_URL}/tree/${OPENAML_COMMIT}/Data`} target="_blank" rel="noreferrer" style={link}>
+          OpenAML lists
+        </a>{" "}
+        (FINOS, Apache 2.0), commit {OPENAML_COMMIT.slice(0, 7)}. Policy and site:{" "}
+        <a href="https://github.com/alazk/newton-openaml-demo" target="_blank" rel="noreferrer" style={link}>
+          github.com/alazk/newton-openaml-demo
+        </a>
+        .
+      </p>
+    </footer>
   );
 }
 
@@ -217,10 +464,10 @@ function Console(props: {
   const hint = busy ? "" : error ? error : to && !valid ? "Not a valid address" : !valid ? "Enter a recipient" : "";
 
   return (
-    <div className="pe-rise" style={{ flex: 1, minHeight: 0, overflow: "auto", display: "flex", alignItems: "center", padding: `${SP.x3}px ${INSET_X}` }}>
+    <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "flex", alignItems: "center", padding: `${SP.x4}px ${INSET_X}` }}>
       <div className="pe-console" style={{ width: "100%" }}>
         {/* Left: what is enforced, and from what data. */}
-        <div style={{ display: "flex", flexDirection: "column", gap: SP.x2 }}>
+        <div className="oa-card" style={{ ["--d" as string]: "0.24s", display: "flex", flexDirection: "column", gap: SP.x2 }}>
           <div style={{ display: "flex", alignItems: "center", height: 20 }}>
             <Head>Active policy</Head>
           </div>
@@ -258,7 +505,7 @@ function Console(props: {
         </div>
 
         {/* Right: the transfer. */}
-        <div style={{ display: "flex", flexDirection: "column", gap: SP.x2 }}>
+        <div className="oa-card" style={{ ["--d" as string]: "0.33s", display: "flex", flexDirection: "column", gap: SP.x2 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20, height: 20 }}>
             <Head>Transfer</Head>
             <span role={error ? "alert" : undefined} style={{ ...small(), color: error ? C.error : C.muted, textAlign: "right" }}>
@@ -529,27 +776,27 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
         justifyContent: "center",
       }}
     >
-      <div className="pe-reveal" style={{ fontFamily: SANS, ...T.h1, color: TONE[result.outcome] }}>
+      <div className="oa-head" style={{ fontFamily: SANS, ...T.h1, color: TONE[result.outcome] }}>
         {HEADLINE[result.outcome]}
       </div>
 
-      <div className="pe-seq" style={{ display: "contents" }}>
-        <div style={{ ...T.valueLg, fontFamily: SANS, color: C.ink, marginTop: SP.x2, maxWidth: "48ch" }}>{reason}</div>
+      <>
+        <div className="oa-rise" style={{ ["--d" as string]: "0.12s", ...T.valueLg, fontFamily: SANS, color: C.ink, marginTop: SP.x2, maxWidth: "48ch" }}>{reason}</div>
 
         {listing && listing.tiers.length > 0 && (
           <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: SP.x1, marginTop: SP.x2 }}>
-            <span style={{ ...small(), color: C.muted }}>Listed by OpenAML</span>
+            <span className="oa-rise" style={{ ["--d" as string]: "0.24s", ...small(), color: C.muted }}>Listed by OpenAML</span>
             {listing.tiers.map((t, i) => (
               <span
                 key={t}
-                className="pe-chip"
+                className="oa-pop"
                 style={{
                   ...small(),
                   borderRadius: R.pill,
                   padding: `${SP.half}px ${SP.x1_5}px`,
                   background: BLOCK_TIERS.includes(t) ? C.flagWash : C.cautionWash,
                   color: BLOCK_TIERS.includes(t) ? C.flagText : C.caution,
-                  animationDelay: `${0.5 + i * 0.12}s`,
+                  ["--d" as string]: `${0.32 + i * 0.08}s`,
                 }}
               >
                 {TIER_INFO[t].name} · {(listing.chains[t] ?? []).join(", ")}
@@ -558,16 +805,16 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
           </div>
         )}
 
-        {note && <div style={{ ...small(), color: C.body, marginTop: SP.x2, maxWidth: "54ch" }}>{note}</div>}
-      </div>
+        {note && <div className="oa-rise" style={{ ["--d" as string]: "0.38s", ...small(), color: C.body, marginTop: SP.x2, maxWidth: "54ch" }}>{note}</div>}
+      </>
 
       {/* The two signed verdicts behind the outcome, each with its attestation. */}
       <div style={{ display: "flex", flexDirection: "column", gap: SP.x1, marginTop: SP.x4 }}>
-        <VerdictRow name="Block rule" side={result.block} />
-        <VerdictRow name="Review rule" side={result.review} />
+        <VerdictRow name="Block rule" side={result.block} delay={0.46} />
+        <VerdictRow name="Review rule" side={result.review} delay={0.54} />
       </div>
 
-      <div className="pe-actions" style={{ display: "flex", alignItems: "center", gap: SP.x3, margin: `${SP.x3}px 0` }}>
+      <div className="pe-actions oa-rise" style={{ ["--d" as string]: "0.64s", display: "flex", alignItems: "center", gap: SP.x3, margin: `${SP.x3}px 0` }}>
         {stale && <span style={{ ...small(), color: C.body, flexShrink: 0 }}>Recipient changed · run again</span>}
         <div className="pe-actions-line" style={{ flex: 1, height: 1, background: C.hairline }} />
         <button
@@ -580,7 +827,7 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
         </button>
       </div>
 
-      <div className="pe-parties" style={{ display: "flex", alignItems: "flex-start", gap: SP.x3, flexWrap: "wrap" }}>
+      <div className="pe-parties oa-rise" style={{ ["--d" as string]: "0.72s", display: "flex", alignItems: "flex-start", gap: SP.x3, flexWrap: "wrap" }}>
         <Party address={result.to} />
         <div style={{ display: "flex", flexDirection: "column", gap: SP.half }}>
           <span style={{ ...small(), color: C.muted, minHeight: H.chip - 12, display: "flex", alignItems: "center" }}>Decided</span>
@@ -593,7 +840,7 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
   );
 }
 
-function VerdictRow({ name, side }: { name: string; side: Done["block"] }) {
+function VerdictRow({ name, side, delay }: { name: string; side: Done["block"]; delay: number }) {
   // A denial that came from failing to screen is grey, not red (lib/outcome.ts).
   const denied = side.allowed === false && !side.failClosed;
   const text = side.allowed === true ? "Allow" : side.allowed === false ? (side.failClosed ? "Not screened" : "Deny") : "No answer";
@@ -601,7 +848,9 @@ function VerdictRow({ name, side }: { name: string; side: Done["block"] }) {
   const wash = side.allowed === true ? C.passWash : denied ? C.flagWash : C.neutralWash;
   return (
     <div
+      className="oa-left"
       style={{
+        ["--d" as string]: `${delay}s`,
         display: "flex",
         alignItems: "center",
         flexWrap: "wrap",
