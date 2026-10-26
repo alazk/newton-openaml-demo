@@ -1,0 +1,4 @@
+# The site reads the index over HTTP at the pinned commit, like the oracle,
+# so the 30 MB of shards never need to ship with a deployment.
+index/shards
+regorus-bin

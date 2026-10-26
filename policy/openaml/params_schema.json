@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "description": "Which OpenAML tiers deny a transfer",
+  "required": ["deny_tiers"],
+  "properties": {
+    "deny_tiers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "enum": ["sanctioned", "blocked", "fraud", "flagged"] },
+      "description": "Deny when the payee or payer is in any of these OpenAML tiers. Block client: [\"sanctioned\", \"blocked\", \"fraud\"]. Review client: [\"flagged\"]."
+    }
+  }
+}

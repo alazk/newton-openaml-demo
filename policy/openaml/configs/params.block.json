@@ -1,0 +1,1 @@
+{ "deny_tiers": ["sanctioned", "blocked", "fraud"] }

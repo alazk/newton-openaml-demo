@@ -1,0 +1,7 @@
+{
+  "name": "OpenAML Address Screening",
+  "version": "1.0.0",
+  "author": "Newton OpenAML Demo",
+  "link": "https://github.com/finos-labs/dtcch-2025-OpenAML",
+  "description": "Denies a transfer when the payee or payer is in an OpenAML tier named in the params (sanctioned, blocked, fraud, flagged). Data: OpenAML's labeled address lists at a pinned commit, read from two hosts that must agree."
+}
