@@ -57,6 +57,7 @@ page ─▶ /api/check ─┬▶ newt_createTask ─▶ block client  ─▶ ope
 ```bash
 npm install
 node scripts/check-consistency.mjs          # pins, samples and counts agree
+node --experimental-strip-types scripts/test-outcome.mjs   # outcome and fail-closed rules
 cargo install regorus --example regorus --root ./regorus-bin
 REGORUS=./regorus-bin/bin/regorus node policy/openaml/test/run.mjs   # 30 policy cases
 node scripts/compile-client.mjs             # interface id 0xf67e14d6
@@ -90,6 +91,14 @@ GitHub at the pinned commit.
    `scripts/task-test.mjs`. Each must land on its expected outcome.
 6. **Deploy the site** on Vercel with `NEWTON_API_KEY`, `POLICY_CLIENT_BLOCK`,
    `POLICY_CLIENT_REVIEW` (see `.env.local.example`), then `bash deploy.sh "message"`.
+
+## Design
+
+The page follows the `newton-demo-design` skill in `.claude/skills/`: deny is
+the brand red `#9F3619` on `#F8EAE4`, and a denial caused by unreadable data is
+shown grey as "Screening unavailable" (`lib/outcome.ts`), never as a match.
+`newton-demo-motion` in the same folder turns the demo into an MP4 for X and
+GIFs for the demo library. Claude Code loads both when working in this repo.
 
 ## Licensing
 

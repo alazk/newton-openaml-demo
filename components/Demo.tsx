@@ -11,7 +11,8 @@
  *      "No decision", never "Allowed".
  *   2. The signed verdicts decide; the OpenAML lookup only explains. If they
  *      disagree, say so instead of letting the reader reconcile it.
- *   3. A denial because data could not be read is not an accusation.
+ *   3. A denial because data could not be read is not an accusation. It is
+ *      grey, headed "Screening unavailable" (lib/outcome.ts decides when).
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -62,7 +63,7 @@ export default function Demo() {
   const [pick, setPick] = useState<Pick>(null);
   const [focused, setFocused] = useState(false);
   const [run, setRun] = useState<Run>({ status: "idle" });
-  const stageRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLElement>(null);
 
   const valid = isAddress(to);
   const busy = run.status === "running";
@@ -108,7 +109,8 @@ export default function Demo() {
   return (
     <div className="pe-shell" style={{ background: C.surface }}>
       <Masthead onHome={reset} />
-      <div
+      <main
+        id="main"
         ref={stageRef}
         className="pe-stage"
         tabIndex={-1}
@@ -134,7 +136,7 @@ export default function Demo() {
             onCheck={check}
           />
         )}
-      </div>
+      </main>
     </div>
   );
 }
@@ -143,7 +145,7 @@ export default function Demo() {
 
 function Masthead({ onHome }: { onHome: () => void }) {
   return (
-    <div
+    <header
       className="pe-mast"
       style={{
         flexShrink: 0,
@@ -167,7 +169,7 @@ function Masthead({ onHome }: { onHome: () => void }) {
             color: C.surface,
             fontFamily: SANS,
             ...T.monoSm,
-            fontWeight: 600,
+            fontWeight: 500,
             letterSpacing: "0.14em",
             textTransform: "uppercase",
             borderRadius: R.pill,
@@ -192,7 +194,7 @@ function Masthead({ onHome }: { onHome: () => void }) {
         <span className="pe-pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: C.pass, display: "block" }} />
         <span style={{ ...label(), color: C.ink }}>Sepolia</span>
       </div>
-    </div>
+    </header>
   );
 }
 
@@ -434,6 +436,7 @@ const HEADLINE: Record<Done["outcome"], string> = {
   allowed: "Allowed",
   review: "Held for review",
   blocked: "Blocked",
+  unavailable: "Screening unavailable",
   none: "No decision",
 };
 
@@ -441,7 +444,8 @@ const TONE: Record<Done["outcome"], string> = {
   allowed: C.passText,
   review: C.caution,
   blocked: C.flagText,
-  none: C.muted,
+  unavailable: C.neutralText,
+  none: C.neutralText,
 };
 
 /** Must match the text /api/check sets when a verdict can't be parsed. */
@@ -456,7 +460,10 @@ function explain(r: Done): { reason: string; note: string | null } {
   const listing = r.lookup?.to;
   const blockHits = listing?.tiers.filter((t) => BLOCK_TIERS.includes(t)) ?? [];
   const reviewHits = listing?.tiers.filter((t) => REVIEW_TIERS.includes(t)) ?? [];
-  const unknown = "The most likely cause is that the operators could not read OpenAML's data, which the policy treats as a denial rather than a guess. The signed verdict stands.";
+  const fromTiers = r.lookup?.from.tiers ?? [];
+  const noLookup = "Which OpenAML tier matched could not be looked up just now. The signed verdict stands.";
+  // Only reachable when the signed deny reasons name a match the lookup cannot find.
+  const disagree = "A fresh lookup of the same OpenAML data finds neither address in this tier, which disagrees with the signed verdict. The signed verdict stands.";
 
   switch (r.outcome) {
     case "blocked":
@@ -466,10 +473,10 @@ function explain(r: Done): { reason: string; note: string | null } {
           note: null,
         };
       }
-      return {
-        reason: "The block rule denied the transfer, so it does not execute.",
-        note: r.lookup ? `A fresh lookup does not find this recipient in a blocking tier. ${unknown}` : null,
-      };
+      if (fromTiers.some((t) => BLOCK_TIERS.includes(t))) {
+        return { reason: `OpenAML lists the sender as ${joinTiers(fromTiers.filter((t) => BLOCK_TIERS.includes(t)))}. The block rule denied the transfer, so it does not execute.`, note: null };
+      }
+      return { reason: "The block rule denied the transfer, so it does not execute.", note: r.lookup ? disagree : noLookup };
     case "review":
       if (reviewHits.length) {
         return {
@@ -477,14 +484,20 @@ function explain(r: Done): { reason: string; note: string | null } {
           note: "Flagged is a community report with no source attached, so it holds the transfer rather than blocking it.",
         };
       }
-      return {
-        reason: "The review rule held the transfer until a person approves it.",
-        note: r.lookup ? `A fresh lookup does not find this recipient in OpenAML's Flagged list. ${unknown}` : null,
-      };
+      if (fromTiers.includes("flagged")) {
+        return { reason: "OpenAML lists the sender as Flagged. The transfer waits until a person approves it.", note: null };
+      }
+      return { reason: "The review rule held the transfer until a person approves it.", note: r.lookup ? disagree : noLookup };
     case "allowed":
       return {
         reason: "The recipient is in none of the OpenAML tiers the policy acts on. Both rules allowed the transfer.",
         note: null,
+      };
+    case "unavailable":
+      return {
+        reason:
+          "The operators could not read OpenAML's data for this check, so the policy refused the transfer rather than guess. It does not execute. This says nothing about the recipient.",
+        note: "This is the policy working as intended: data it cannot read is treated the same as a match, never as a pass.",
       };
     case "none": {
       const why = [r.block.error, r.review.error].find((e) => e && e !== READ_ERROR) ?? null;
@@ -581,29 +594,32 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
 }
 
 function VerdictRow({ name, side }: { name: string; side: Done["block"] }) {
-  const text = side.allowed === true ? "Allow" : side.allowed === false ? "Deny" : "No answer";
-  const color = side.allowed === true ? C.passText : side.allowed === false ? C.flagText : C.muted;
-  const wash = side.allowed === true ? C.passWash : side.allowed === false ? C.flagWash : C.field;
+  // A denial that came from failing to screen is grey, not red (lib/outcome.ts).
+  const denied = side.allowed === false && !side.failClosed;
+  const text = side.allowed === true ? "Allow" : side.allowed === false ? (side.failClosed ? "Not screened" : "Deny") : "No answer";
+  const color = side.allowed === true ? C.passText : denied ? C.flagText : C.neutralText;
+  const wash = side.allowed === true ? C.passWash : denied ? C.flagWash : C.neutralWash;
   return (
     <div
       style={{
         display: "flex",
         alignItems: "center",
-        gap: SP.x1_5,
+        flexWrap: "wrap",
+        columnGap: SP.x1_5,
+        rowGap: SP.half,
         padding: `${SP.x1}px ${SP.x1_5}px`,
         border: `${BORDER}px solid ${C.hairline}`,
         borderRadius: R.md,
       }}
     >
-      <span style={{ ...label(), color: C.ink, minWidth: 96 }}>{name}</span>
-      <span style={{ ...small(), fontWeight: 500, color, background: wash, borderRadius: R.pill, padding: `${SP.half}px ${SP.x1_5}px` }}>{text}</span>
-      <span style={{ flex: 1 }} />
+      <span style={{ ...label(), color: C.ink, minWidth: 88 }}>{name}</span>
+      <span style={{ ...small(), fontWeight: 500, color, background: wash, borderRadius: R.pill, padding: `${SP.half}px ${SP.x1_5}px`, whiteSpace: "nowrap" }}>{text}</span>
       {side.explorerUrl ? (
-        <a href={side.explorerUrl} target="_blank" rel="noreferrer" style={{ ...small(), color: C.ink, textDecoration: "underline", textUnderlineOffset: 3, whiteSpace: "nowrap" }}>
+        <a href={side.explorerUrl} target="_blank" rel="noreferrer" style={{ ...small(), marginLeft: "auto", color: C.ink, textDecoration: "underline", textUnderlineOffset: 3, whiteSpace: "nowrap" }}>
           Attestation ↗
         </a>
       ) : (
-        <span style={{ ...small(), color: C.muted }}>No attestation</span>
+        <span style={{ ...small(), marginLeft: "auto", color: C.muted }}>No attestation</span>
       )}
     </div>
   );

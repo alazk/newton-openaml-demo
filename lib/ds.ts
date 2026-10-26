@@ -101,10 +101,14 @@ export const C = {
   pass: "#0B6E4F",
   passText: "#095A41",
   passWash: "#E6F2EE",
-  flag: "#AD2B03",
-  flagText: "#8F2402",
-  flagWash: "#FBE9E3",
-  error: "#8F2402",
+  /** Deny, blocked, not authorized: the Newton demos' brand red. Never orange. */
+  flag: "#9F3619",
+  flagText: "#9F3619",
+  flagWash: "#F8EAE4",
+  error: "#9F3619",
+  /** Fail closed: a denial because data could not be read. Grey, never red. */
+  neutralText: "#6B6B6C",
+  neutralWash: "#F5F5F6",
   caution: "#8A5E14",
   cautionWash: "#FCF4E5",
 } as const;

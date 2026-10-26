@@ -5,7 +5,7 @@
  * and the gateway is strict both ways: an entry for a WASM policy must carry
  * the oracle's arguments, and an entry for a pure-Rego policy MUST be "0x"
  * ("wasm_args[0] must be empty for pure-Rego policy …"). Hardcoding either
- * shape breaks the page the moment the client's set changes — which is
+ * shape breaks the page the moment the client's set changes, which is
  * exactly what happened mid-rollout on Oct 9 2026.
  *
  * So: read the set (getPolicies), check each policy's wasmCid, and build the

@@ -2,3 +2,4 @@
 # so the 30 MB of shards never need to ship with a deployment.
 index/shards
 regorus-bin
+.claude

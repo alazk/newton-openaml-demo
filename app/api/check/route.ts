@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { wasmArgsFor } from "@/lib/policy-set";
 import { extractAllow, extractTaskId } from "@/lib/verdict";
-import { lookup, type Listing } from "@/lib/openaml";
+import { BLOCK_TIERS, REVIEW_TIERS, lookup, type Listing } from "@/lib/openaml";
+import { decide, extractDenies, failedClosed, type Outcome, type Side } from "@/lib/outcome";
 
 /**
  * One check: the same transfer submitted as a real, quorum-signed Newton task
@@ -11,10 +12,11 @@ import { lookup, type Listing } from "@/lib/openaml";
  *   block client   denies Sanctioned, Blocked and Fraud
  *   review client  denies Flagged
  *
- * Outcome, from the two signed verdicts only:
- *   block denies                    → blocked
- *   block allows, review denies     → review
- *   both allow                      → allowed
+ * Outcome, from the two signed verdicts (lib/outcome.ts):
+ *   block denies on a match              → blocked
+ *   block allows, review denies on a match → review
+ *   either denies because it could not screen → unavailable
+ *   both allow                           → allowed
  *   either unreadable (and no block deny) → none
  *
  * After that, an unsigned lookup in the OpenAML index says which tier the
@@ -34,11 +36,11 @@ const MAX_BODY_BYTES = 1_024;
 
 const isAddress = (a: unknown): a is string => typeof a === "string" && /^0x[0-9a-fA-F]{40}$/.test(a);
 
-type Side = { allowed: boolean | null; taskId: string | null; explorerUrl: string | null; error: string | null };
+type Submitted = Omit<Side, "failClosed">;
 export type CheckResponse =
   | {
       ok: true;
-      outcome: "allowed" | "review" | "blocked" | "none";
+      outcome: Outcome;
       to: string;
       from: string;
       block: Side;
@@ -56,7 +58,7 @@ function hexEncodeJson(obj: unknown): string {
   return "0x" + Buffer.from(JSON.stringify(obj), "utf8").toString("hex");
 }
 
-async function submit(apiKey: string, client: string, to: string, from: string): Promise<Side> {
+async function submit(apiKey: string, client: string, to: string, from: string): Promise<Submitted> {
   const entry = hexEncodeJson({ to, from });
   const wasmArgs = (await wasmArgsFor(client, entry)) ?? [entry];
   try {
@@ -82,11 +84,11 @@ async function submit(apiKey: string, client: string, to: string, from: string):
       json = JSON.parse(text);
     } catch {
       console.error("[check] non-JSON gateway response:", client, res.status, text.slice(0, 500));
-      return { allowed: null, taskId: null, explorerUrl: null, error: "The Newton gateway returned an unexpected response." };
+      return { allowed: null, taskId: null, explorerUrl: null, denies: null, error: "The Newton gateway returned an unexpected response." };
     }
     if (json.error) {
       console.error("[check] gateway error:", client, JSON.stringify(json.error).slice(0, 2000));
-      return { allowed: null, taskId: null, explorerUrl: null, error: "The Newton gateway could not run this check." };
+      return { allowed: null, taskId: null, explorerUrl: null, denies: null, error: "The Newton gateway could not run this check." };
     }
     const taskId = extractTaskId(json.result);
     const allowed = extractAllow(json.result);
@@ -94,12 +96,13 @@ async function submit(apiKey: string, client: string, to: string, from: string):
       allowed: allowed ?? null,
       taskId,
       explorerUrl: taskId ? `https://explorer.newton.xyz/testnet/task/${taskId}` : null,
+      denies: extractDenies(json.result),
       error: allowed === undefined ? "The operators' answer could not be read." : null,
     };
   } catch (err) {
     const timeout = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
     console.error("[check] request failed:", client, err);
-    return { allowed: null, taskId: null, explorerUrl: null, error: timeout ? "The Newton gateway did not answer in time." : "Could not reach the Newton gateway." };
+    return { allowed: null, taskId: null, explorerUrl: null, denies: null, error: timeout ? "The Newton gateway did not answer in time." : "Could not reach the Newton gateway." };
   }
 }
 
@@ -132,14 +135,16 @@ export async function POST(req: NextRequest) {
   // A fresh random sender unless one is given, so only the recipient can cause a denial.
   const from = (body.from as string | undefined) ?? "0x" + Buffer.from(crypto.getRandomValues(new Uint8Array(20))).toString("hex");
 
-  const [block, review, listing] = await Promise.all([
+  const [b, r, listing] = await Promise.all([
     submit(apiKey, blockClient, to, from),
     submit(apiKey, reviewClient, to, from),
     lookup([to, from]).catch(() => null),
   ]);
 
-  const outcome =
-    block.allowed === false ? "blocked" : block.allowed === null || review.allowed === null ? "none" : review.allowed === false ? "review" : "allowed";
+  const pair = listing ? { to: listing[0], from: listing[1] } : null;
+  const block: Side = { ...b, failClosed: failedClosed(b.allowed, b.denies, BLOCK_TIERS, pair) };
+  const review: Side = { ...r, failClosed: failedClosed(r.allowed, r.denies, REVIEW_TIERS, pair) };
+  const outcome = decide(block, review);
 
   return NextResponse.json({
     ok: true,
@@ -148,7 +153,7 @@ export async function POST(req: NextRequest) {
     from,
     block,
     review,
-    lookup: listing ? { to: listing[0], from: listing[1] } : null,
+    lookup: pair,
     decidedAt: new Date().toISOString(),
   } satisfies CheckResponse);
 }

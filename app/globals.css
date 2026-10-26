@@ -39,8 +39,9 @@
   --disabled: #9a9a9b;
 
   --pass: #0b6e4f;
-  --flag: #ad2b03;
-  --error: #8f2402;
+  --flag: #9f3619;
+  --flag-wash: #f8eae4;
+  --error: #9f3619;
   --caution: #8a5e14;
 
   /*
@@ -637,4 +638,24 @@ a {
   .oa-pickers {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+/* Skip link: off screen until focused, then a pill in the top left corner. */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  z-index: 10;
+  transform: translateY(-80px);
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font: 500 14px/20px var(--sans);
+  transition: transform var(--duration) var(--ease-newton);
+}
+.skip-link:focus-visible {
+  transform: none;
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
 }

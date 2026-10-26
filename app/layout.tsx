@@ -12,13 +12,19 @@ export const metadata: Metadata = {
   title: "Newton OpenAML Demo",
   description: DESCRIPTION,
   openGraph: { title: "Newton OpenAML Demo", description: DESCRIPTION, type: "website", siteName: "Newton" },
-  twitter: { card: "summary", title: "Newton OpenAML Demo", description: DESCRIPTION },
+  // Images come from app/opengraph-image.tsx and app/twitter-image.tsx.
+  twitter: { card: "summary_large_image", title: "Newton OpenAML Demo", description: DESCRIPTION },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={sans.variable}>
-      <body>{children}</body>
+      <body>
+        <a href="#main" className="skip-link">
+          Skip to content
+        </a>
+        {children}
+      </body>
     </html>
   );
 }
