@@ -7,7 +7,7 @@ description: Visual and copy rules for building or restyling any Newton demo, th
 
 The system the Newton Protocol demos share (sanctions, Lazarus Scan, Pool Guard, OpenAML). It comes from the Newton Explorer token contract used in Lazarus Scan (`design/tokens.css`) and the sanctions demo's `DESIGN-SYSTEM.md`, plus a few rules borrowed from `landing-page-design` in [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) (MIT).
 
-The demos are educational. Their job is to make one Newton Protocol decision legible: what was checked, against what data, who signed it, and what happens next. Each demo opens like a polished landing page (glass nav, gradient hero, an animated diagram, a tagline that lights up as you scroll) and then hands over to the working console. Conversion patterns (free trials, pricing, risk reversal, testimonial walls) do not apply. The reference build is the OpenAML demo (`components/Demo.tsx`, `components/CheckFlow.tsx`).
+The demos are educational. Their job is to make one Newton Protocol decision legible: what was checked, against what data, who signed it, and what happens next. Each demo is dark and cinematic: near-black with film grain and a brand-red glow, a glass nav, a gradient hero beside a 3D visual of the real data, a tagline that lights up as you scroll, then the working console on a glass panel. Conversion patterns (free trials, pricing, risk reversal, testimonial walls) do not apply. The reference build is the OpenAML demo (`components/Demo.tsx`, `components/CheckFlow.tsx`).
 
 When a rule here conflicts with a framework default or another design skill, this file wins. When the user's explicit request conflicts with a rule, the user wins. When restyling an existing demo, read its own tokens file first; if it differs from this one, ask which wins before changing it.
 
@@ -19,36 +19,38 @@ When a rule here conflicts with a framework default or another design skill, thi
 
 ## 2. Colour
 
-Flat colours only. No background gradients. The one gradient is on the hero headline text: left to right `#0E0E0F` to `#6B6B6C`, clipped to the text.
+Dark theme. Near-black surfaces from the landing-page-design palette, off-white text. Backgrounds stay flat; colour light comes only from the soft glows in section 5. The one gradient on text is the hero headline, left to right `#FFFFFF` to `#9B9B9B`.
 
 **Neutrals**
 
-| Token | Hex | Use |
+| Token | Value | Use |
 |---|---|---|
-| ink | `#0E0E0F` | Text, primary buttons, focus ring |
-| ink hover | `#393939` | Hover of ink fills |
-| secondary | `#6B6B6C` | Body copy, labels |
-| tertiary | `#737374` | Hints, metadata (clears 4.5:1 on bone) |
-| disabled | `#9A9A9B` | Disabled text, input borders at rest |
-| hairline | `#E3E3E4` | Dividers, outline buttons |
-| sunken | `#F5F5F6` | Field fills, segmented control track, hover |
-| surface | `#FFFFFF` | Cards, inputs |
-| bone | `#FBFCFE` | Page background where a demo uses one |
-| frame outline | `1px solid` ink at 14% | Cards and the stage |
+| page | `#000000` | Page background |
+| ink | `#F4F4F5` | Text, primary button fill, focus ring |
+| ink hover | `#D4D4D8` | Hover of the white button |
+| secondary | `#A1A1A6` | Body copy, labels (7.6:1) |
+| tertiary | `#86868B` | Hints, metadata, captions (5.4:1) |
+| disabled | `#5A5A5E` | Disabled text |
+| control | `#3A3A3D` | Input borders at rest |
+| hairline | `#262628` | Dividers, outline buttons |
+| field | `#1A1A1C` | Segmented track, hover fills |
+| raised | `#2A2A2D` | Selected segment |
+| input | `#050506` | Field fill |
+| glass | white at 3.5%, edge white at 9%, `backdrop-filter: blur(20px) saturate(1.2)`, inset top highlight white at 6% | Stage, cards, chips, nav |
 
-**Outcome tones** (text on wash; the edge colour is for borders and dots)
+**Outcome tones.** The wash is the light-theme colour at about 30% over black; the text is a lighter tint of the same hue so it reads on black (all clear 4.5:1 on their wash).
 
-| Outcome | Text | Wash | Edge |
+| Outcome | Text | Wash | Glow and edge |
 |---|---|---|---|
-| Pass, allowed, clear | `#095A41` | `#E6F2EE` | `#0B6E4F` |
-| **Deny, blocked, not authorized (brand red)** | `#9F3619` | `#F8EAE4` | `#9F3619` |
-| Caution, review, stale data | `#8A5E14` | `#FCF4E5` | `#8A5E14` |
-| Neutral, no decision, unavailable | `#6B6B6C` | `#F5F5F6` | `#6B6B6C` |
+| Pass, allowed, clear | `#62D6A8` | `rgba(11,110,79,0.28)` | `#2FBF85` |
+| **Deny, blocked, not authorized (brand red)** | `#F2896B` | `rgba(159,54,25,0.30)`, the brand red `#9F3619` | `#E0552E` |
+| Caution, review, stale data | `#E3B45A` | `rgba(138,94,20,0.30)` | `#E3B45A` |
+| Neutral, no decision, unavailable | `#A1A1A6` | `#1A1A1C` | none |
 
-- The brand red is the only deny colour. Never orange for "no".
+- The brand red `#9F3619` is the base of every deny wash and every glow. Its 13° hue carries through the text tint `#F2896B` and the glow `#E0552E`. Never orange for "no".
 - Input errors use the deny text colour.
-- **A fail-closed denial is grey, not red.** When the policy denies because it could not screen, painting it red beside "Blocked" accuses the counterparty. Use the neutral tone and say the system refused to guess.
-- Headline text on a wash is the tone's text colour or ink, never white.
+- **A fail-closed denial is grey, not red.** When the policy denies because it could not screen, painting it red beside "Blocked" accuses the counterparty. Use the neutral tone, no glow, and say the system refused to guess.
+- Verdict headlines glow softly in their tone (`text-shadow: 0 0 32px` at 35 to 55%); neutral states do not glow.
 
 ## 3. Type
 
@@ -56,7 +58,7 @@ Suisse Intl is the licensed brand face; **Inter** stands in until it is licensed
 
 | Role | Size | Weight | Line height | Tracking | Use |
 |---|---|---|---|---|---|
-| hero | `clamp(2.75rem, 1.5rem + 4.2vw, 4.5rem)` (44–72) | 500 | 1.02 | -0.035em | Hero headline only, gradient text |
+| hero | `clamp(3rem, 1.4rem + 5vw, 5.25rem)` (48–84) | 500 | 1.02 | -0.035em | Hero headline only, white to grey gradient text |
 | tagline | `clamp(2rem, 1.1rem + 2.8vw, 3.25rem)` (32–52) | 500 | 1.14 | -0.025em | The tagline reveal section |
 | display | `clamp(1.5rem, 1.2rem + 1.5vw, 1.75rem)` (24–28) | 500 | 1.15 | -0.015em | Verdict and running-state headline |
 | title | `clamp(1.125rem, 1rem + 0.6vw, 1.25rem)` (18–20) | 500 | 1.2 | -0.01em | Page title |
@@ -90,19 +92,23 @@ Suisse Intl is the licensed brand face; **Inter** stands in until it is licensed
 
 **Page, top to bottom:** floating nav, hero, tagline, the check section, footer. Sections sit in a 1440px column with `clamp(16px, 4vw, 48px)` side padding.
 
-**Floating glass nav:** fixed 16px from the top, centred with auto margins and `width: max-content` (never `left: 50%` plus a transform, which halves the width it can lay out in and pushes the logo out on phones). Pill shape, white at 72% over `backdrop-filter: blur(16px) saturate(1.4)`, 1px ink-at-10% border, soft shadow. Contents: Newton logo (`public/newton-logo.svg`, 18px, back to top), black pill lockup with the demo name, pulsing dot plus "Sepolia" (caution colour and the age when data is stale), and a small primary "Check a wallet" button that scrolls to the check (hidden on phones).
+**Atmosphere:** film grain over the whole page (a fixed SVG `feTurbulence` overlay at 7% opacity, `pointer-events: none`), and soft brand-red glows behind the hero visual and the check (a radial gradient of `#9F3619` from 55% to transparent, blurred 60px, behind content and never over text). The stage carries a thin red light along its top edge (a 1px gradient line, transparent to `#E0552E` to transparent).
 
-**Hero:** two columns from 1024px. Left: eyebrow ("A Newton Protocol demo"), gradient headline (max 680px, balanced), one lead paragraph (18px, 560px) naming the data, its size and who signs, one primary button that scrolls to the check, then the real tier or list counts as tone-coloured chips. Right: a bone card with an eyebrow ("What happens on every check") and the animated check diagram, captioned underneath. Top padding clears the nav (120px desktop, 104px below 1024).
+**Floating glass nav:** fixed 16px from the top, centred with auto margins and `width: max-content` (never `left: 50%` plus a transform, which halves the width it can lay out in and pushes the logo out on phones). Pill shape, dark glass (`rgba(14,14,16,0.6)` over `backdrop-filter: blur(16px) saturate(1.4)`), white-at-10% border, deep shadow. Contents: the white Newton logo (`public/newton-logo-white.svg`, 18px, back to top; the black `newton-logo.svg` disappears on dark), white pill lockup with the demo name in black, pulsing dot plus "Sepolia" (caution colour and the age when data is stale), and a small primary "Check a wallet" button that scrolls to the check (hidden on phones).
+
+**Hero:** two columns from 1024px. Left: eyebrow ("A Newton Protocol demo"), gradient headline (max 680px, balanced), one lead paragraph (18px, 560px) naming the data, its size and who signs, one primary button that scrolls to the check, then the real tier or list counts as tone-coloured chips. Right: the data globe over a red glow, captioned underneath. A quiet proof line under the button names the network and the data licence. Top padding clears the nav (120px desktop, 104px below 1024).
+
+**Data globe (the hero's 3D visual):** the demo's real dataset as a slowly turning sphere of 2,600 points on a canvas with its own projection (no 3D library). Every dot stands for the same number of records, and colours follow the real counts: the common tier dim gold, the rare blocking tiers glowing brand red, so the picture is the true shape of the data. A red scan ring sweeps the globe and the red dots flare as it passes. The globe leans toward the pointer and the glass tier chips floating around it (name and real count each) move with it in 3D (`perspective`, `translateZ`) and bob gently. The caption states the scale ("about 140 addresses each") and the counts. Pauses off screen and in background tabs; reduced motion draws one still frame. For a demo without a list dataset, pick the visual that is equally literal about its data.
 
 **Tagline reveal:** its own section between the hero and the check, at least two lines, a benefit statement in plain words. Words start at 22% opacity and light up one at a time in reading order as the paragraph scrolls through the viewport (progress from its top at 85% of the viewport to its bottom at 55%), on a `requestAnimationFrame`-throttled scroll listener. The full sentence is the `aria-label`; the word spans are `aria-hidden`.
 
 **Check section:** eyebrow "Try it", heading "Check a transfer", then the stage card.
 
-**Stage:** one bordered card (16px radius) that changes state: the console at rest, the running state while operators check, the verdict at the end. It never swaps to a new screen or drops in like a modal. On desktop its height is `clamp(600px, calc(100dvh - 190px), 820px)`, so after "Check a wallet" scrolls to it the whole card fits under the nav and a verdict never scrolls. On phones (or below 700px tall) it becomes part of the page; when its state changes and its top is under the nav, scroll it back into view (`scroll-margin-top: 88px`).
+**Stage:** one glass card (16px radius) that changes state: the console at rest, the running state while operators check, the verdict at the end. It never swaps to a new screen or drops in like a modal. On desktop its height is `clamp(600px, calc(100dvh - 190px), 820px)`, so after "Check a wallet" scrolls to it the whole card fits under the nav and a verdict never scrolls. On phones (or below 700px tall) it becomes part of the page; when its state changes and its top is under the nav, scroll it back into view (`scroll-margin-top: 88px`).
 
 **Running state:** display headline "Checking the transfer", one paragraph saying what is happening (who checks, against what, that the rules run at once and are signed on Sepolia), then the check diagram at running speed. Never a percentage or a step counter: the diagram shows the order of events, not live progress.
 
-**Check diagram:** boxes for the transfer (short address), Newton Protocol operators (four dots), the data source with its version or commit, and the verdict signed on Sepolia, joined by hairlines with marching dashes. Pulses travel transfer to operators, out to the data and back, then to the verdict; boxes outline in ink as a pulse reaches them; operator dots light in turn. SVG `animateMotion` (no JS clock), 5.2s loop in the hero, 3.2s while checking. A wide layout from 640px and a stacked one below. Every box must be true of the deployed policy.
+**Check diagram:** near-black boxes (`#0E0E10`, `#2A2A2D` outline) for the transfer (short address), Newton Protocol operators (four dots), the data source with its version or commit, and the verdict signed on Sepolia, joined by hairlines with marching dashes. Pulses travel transfer to operators, out to the data and back, then to the verdict; boxes outline in white as a pulse reaches them; operator dots light in turn; pulses are white with a soft glow. SVG `animateMotion` (no JS clock), 5.2s loop in the hero, 3.2s while checking. A wide layout from 640px and a stacked one below. Every box must be true of the deployed policy.
 
 **Footer:** one line of caption type above a hairline: the network, the data source with commit and licence, and the repo.
 
@@ -125,10 +131,10 @@ Nothing sits above the headline. Detail never rearranges the verdict. The addres
 
 ## 6. Components
 
-- **Primary button:** pill, ink fill, white `ui` text, 44px tall (48px and 16px text in the hero, 36px in the nav). Disabled is the sunken fill with disabled text, never a grey slab. While a check runs it stays dark with a light sweep band, and says what is happening ("Operators are checking the transfer…").
+- **Primary button:** white pill, black `ui` text, 44px tall (48px and 16px text in the hero, 36px in the nav). Disabled is the sunken fill with disabled text, never a grey slab. While a check runs it stays dark with a light sweep band, and says what is happening ("Operators are checking the transfer…").
 - **Outline button:** pill, 1px hairline, ink text, hover to sunken fill.
 - **Field:** visible label above (not just a placeholder), white fill, 1px disabled-grey border, 12px radius, mono text. Truncated to `0x1234…5678` at rest, whole on focus. Error: deny-colour border and an inline message.
-- **Segmented picks (radio group):** sunken track with 4px padding; selected option is a white raised pill with `0 1px 2px` ink at 14%. Arrow keys move, only the selected option is tabbable.
+- **Segmented picks (radio group):** `#1A1A1C` track with 4px padding; selected option is a `#2A2A2D` raised pill with an inset top highlight. Arrow keys move, only the selected option is tabbable.
 - **Tag (a fact):** soft wash, no border, caption type. **Button (an action):** bordered or filled. They must never look the same.
 - **Icons:** Phosphor. Never Material.
 
@@ -205,8 +211,9 @@ These are the closest the demos get to marketing, and still not landing pages.
 ## 12. Quick check before handing over
 
 - [ ] Only the tokens above; no new colours, sizes or radii
-- [ ] Deny is brand red `#9F3619` on `#F8EAE4`; fail-closed is grey
-- [ ] Glass nav, gradient hero, tagline reveal, blur-in entrances and the check diagram present; the diagram matches the deployed policy
+- [ ] Dark theme: black page, grain, red glows, glass panels, white logo
+- [ ] Deny washes and glows built on brand red `#9F3619`, deny text `#F2896B`; fail-closed is grey with no glow
+- [ ] Glass nav, gradient hero, data globe, tagline reveal, blur-in entrances and the check diagram present; globe counts and diagram boxes match the real data and the deployed policy
 - [ ] Inter plus JetBrains Mono, weights 400 and 500, no italics
 - [ ] Verdict panel order kept; address whole; timestamp present
 - [ ] Unreadable responses show "No decision"

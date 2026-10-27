@@ -18,7 +18,7 @@ export default function NotFound() {
         }}
       >
         <Link href="/" aria-label="Newton OpenAML Demo home" style={{ display: "block", lineHeight: 0 }}>
-          <img src="/newton-logo.svg" alt="Newton" style={{ height: 18, display: "block" }} />
+          <img src="/newton-logo-white.svg" alt="Newton" style={{ height: 18, display: "block" }} />
         </Link>
       </header>
       <main

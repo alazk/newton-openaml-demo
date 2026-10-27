@@ -23,13 +23,15 @@ export const alt =
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const INK = "#0E0E0F";
-const MUTED = "#6B6B6C";
-const HAIR = "#E3E3E4";
-const FIELD = "#F5F5F6";
-const RED = "#9F3619";
-const TINT = "#F8EAE4";
-const GOLD = "#8A5E14";
+// Dark theme, matching the page: black, off-white text, brand-red glow.
+const INK = "#F4F4F5";
+const MUTED = "#A1A1A6";
+const HAIR = "#2A2A2D";
+const FIELD = "#1A1A1C";
+const RED = "#F2896B";
+const EDGE = "#E0552E";
+const TINT = "rgba(159, 54, 25, 0.35)";
+const GOLD = "#E3B45A";
 
 const LOGO_A =
   "M9.88853 0.248964C10.4764 -0.0829879 11.1963 -0.0829879 11.7842 0.248964L20.7229 5.31822C21.3068 5.64518 21.6698 6.26209 21.6728 6.93199V17.0685C21.6698 17.7384 21.3068 18.3543 20.7229 18.6823L11.7842 23.7495C11.1963 24.0835 10.4764 24.0835 9.88853 23.7495L0.949858 18.6803C0.365945 18.3523 0.00299955 17.7364 0 17.0665V6.92799C0.0039994 6.25909 0.365945 5.64318 0.949858 5.31622L9.88853 0.248964ZM10.5504 1.57277L1.48778 16.9845C1.42279 17.0975 1.42379 17.2365 1.48978 17.3475C1.55577 17.4595 1.67775 17.5274 1.80773 17.5244H19.929C20.058 17.5254 20.179 17.4575 20.244 17.3465C20.309 17.2345 20.31 17.0965 20.245 16.9845L11.1863 1.57277C11.1193 1.46079 10.9984 1.3918 10.8674 1.3918C10.7364 1.3918 10.6154 1.46079 10.5484 1.57277H10.5504ZM15.4277 12.1152C15.4277 14.6209 13.364 16.6486 10.8124 16.6486C8.26277 16.6486 6.19708 14.6209 6.19708 12.1152C6.19708 9.6116 8.26277 7.58389 10.8124 7.58389C13.364 7.58389 15.4297 9.6116 15.4297 12.1152H15.4277ZM8.91267 13.669C8.91267 13.753 8.94667 13.833 9.00566 13.892C9.06565 13.951 9.14664 13.984 9.23062 13.983H12.3942C12.4781 13.984 12.5591 13.951 12.6191 13.892C12.6791 13.834 12.7131 13.753 12.7141 13.669V10.5615C12.7141 10.3895 12.5721 10.2495 12.3962 10.2495H9.23062C9.05265 10.2495 8.91267 10.3895 8.91267 10.5615V13.669Z";
@@ -60,7 +62,7 @@ function Tier({ name, count, hit, review }: { name: string; count: string; hit?:
         boxSizing: "border-box",
         borderRadius: 12,
         background: hit ? TINT : FIELD,
-        border: `2px solid ${hit ? RED : FIELD}`,
+        border: `2px solid ${hit ? EDGE : FIELD}`,
         marginTop: 10,
       }}
     >
@@ -88,7 +90,8 @@ export default async function OpengraphImage() {
           height: "100%",
           display: "flex",
           flexDirection: "column",
-          background: "#FFFFFF",
+          background: "#000000",
+          backgroundImage: "radial-gradient(circle at 78% 52%, rgba(159,54,25,0.55) 0%, rgba(159,54,25,0.12) 32%, rgba(0,0,0,0) 58%)",
           padding: "64px 80px",
           boxSizing: "border-box",
           fontFamily: fonts ? "Inter" : undefined,
@@ -103,7 +106,7 @@ export default async function OpengraphImage() {
             style={{
               display: "flex",
               background: INK,
-              color: "#FFFFFF",
+              color: "#0A0A0A",
               fontSize: 14,
               fontWeight: 500,
               letterSpacing: 2.2,
@@ -137,7 +140,7 @@ export default async function OpengraphImage() {
                 border: `2px solid ${HAIR}`,
                 borderRadius: 24,
                 padding: "24px 24px 28px",
-                background: "#FFFFFF",
+                background: "#0E0E10",
               }}
             >
               <span style={{ fontSize: 21, fontWeight: 500, color: INK }}>OpenAML address lists</span>
@@ -157,12 +160,12 @@ export default async function OpengraphImage() {
                 fontWeight: 500,
                 color: RED,
                 background: TINT,
-                border: `2px solid ${RED}`,
+                border: `2px solid ${EDGE}`,
                 borderRadius: 999,
                 padding: "10px 22px",
               }}
             >
-              <div style={{ width: 10, height: 10, borderRadius: 999, background: RED }} />
+              <div style={{ width: 10, height: 10, borderRadius: 999, background: EDGE }} />
               Transfer blocked
             </div>
           </div>

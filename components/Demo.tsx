@@ -17,6 +17,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import CheckFlow from "@/components/CheckFlow";
+import DataGlobe, { globeLegend } from "@/components/DataGlobe";
 import { C, H, R, SP, T, BORDER, INSET_X } from "@/lib/ds";
 import {
   BLOCK_TIERS,
@@ -140,9 +141,10 @@ export default function Demo() {
           ref={checkRef}
           aria-labelledby="check-title"
           className={`oa-wrap ${checkOn ? "oa-on" : ""}`}
-          style={{ paddingTop: SP.x6, paddingBottom: SP.x8, scrollMarginTop: 88 }}
+          style={{ position: "relative", paddingTop: SP.x6, paddingBottom: SP.x8, scrollMarginTop: 88 }}
         >
-          <div className="oa-in" style={{ marginBottom: SP.x3 }}>
+          <div className="oa-glow" aria-hidden style={{ width: "70%", height: "60%", left: "15%", top: "30%", opacity: 0.55 }} />
+          <div className="oa-in" style={{ position: "relative", zIndex: 1, marginBottom: SP.x3 }}>
             <Eyebrow>Try it</Eyebrow>
             <h2 id="check-title" style={{ margin: `${SP.x1}px 0 0`, fontFamily: SANS, ...T.h2, color: C.ink }}>
               Check a transfer
@@ -224,7 +226,7 @@ function Nav({ onHome, onCheck }: { onHome: () => void; onCheck: () => void }) {
   return (
     <header className="oa-nav">
       <button type="button" onClick={onHome} className="pe-reset" aria-label="Back to the top" style={{ display: "block", lineHeight: 0 }}>
-        <img src="/newton-logo.svg" alt="Newton" style={{ height: 18, display: "block" }} />
+        <img src="/newton-logo-white.svg" alt="Newton" style={{ height: 18, display: "block" }} />
       </button>
       <span
         style={{
@@ -259,8 +261,6 @@ function Nav({ onHome, onCheck }: { onHome: () => void; onCheck: () => void }) {
 
 /* ── Hero ───────────────────────────────────────────────── */
 
-const HERO_ADDRESS = "0x57a7…ff80"; // a real OpenAML Fraud sample (SAMPLES.fraud)
-
 function Hero({ onCheck }: { onCheck: () => void }) {
   const [on, setOn] = useState(false);
   useEffect(() => {
@@ -292,47 +292,16 @@ function Hero({ onCheck }: { onCheck: () => void }) {
             Check a wallet
           </button>
         </div>
-        <div className="oa-in" style={{ ["--d" as string]: "0.4s", marginTop: SP.x5 }}>
-          <span style={{ ...small(), color: C.muted }}>OpenAML tiers in this demo</span>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: SP.x1, marginTop: SP.x1 }}>
-            {(["sanctioned", "blocked", "fraud", "flagged"] as Tier[]).map((t) => {
-              const block = BLOCK_TIERS.includes(t);
-              return (
-                <span
-                  key={t}
-                  style={{
-                    ...small(),
-                    borderRadius: R.pill,
-                    padding: `${SP.half}px ${SP.x1_5}px`,
-                    background: block ? C.flagWash : C.cautionWash,
-                    color: block ? C.flagText : C.caution,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {TIER_INFO[t].name} · {fmt(TIER_COUNTS[t])}
-                </span>
-              );
-            })}
-          </div>
-        </div>
+        <p className="oa-in" style={{ ["--d" as string]: "0.4s", margin: `${SP.x4}px 0 0`, ...small(), color: C.muted2 }}>
+          Signed on Ethereum Sepolia · Data from OpenAML (FINOS, Apache 2.0)
+        </p>
       </div>
 
-      <figure className="oa-card" style={{ ["--d" as string]: "0.3s", margin: 0 }}>
-        <div
-          style={{
-            border: `1px solid color-mix(in srgb, ${C.ink} 14%, transparent)`,
-            borderRadius: R.lg,
-            background: C.bone,
-            padding: `${SP.x3}px ${SP.x3}px ${SP.x4}px`,
-          }}
-        >
-          <Eyebrow>What happens on every check</Eyebrow>
-          <div style={{ marginTop: SP.x3 }}>
-            <CheckFlow address={HERO_ADDRESS} />
-          </div>
-        </div>
-        <figcaption style={{ ...small(), color: C.muted, marginTop: SP.x1_5, maxWidth: "60ch" }}>
-          Every operator reads OpenAML&apos;s lists at the same pinned commit, so they all check against the same data.
+      <figure className="oa-card" style={{ ["--d" as string]: "0.25s", margin: 0, position: "relative" }}>
+        <div className="oa-glow" aria-hidden style={{ width: "90%", aspectRatio: "1", left: "5%", top: "5%" }} />
+        <DataGlobe />
+        <figcaption style={{ position: "relative", ...small(), color: C.muted2, marginTop: SP.x1, maxWidth: "62ch", marginInline: "auto", textAlign: "center" }}>
+          {globeLegend()}
         </figcaption>
       </figure>
     </section>
@@ -474,8 +443,8 @@ function Console(props: {
           <div
             style={{
               flex: 1,
-              background: C.surface,
-              border: `1px solid color-mix(in srgb, ${C.ink} 14%, transparent)`,
+              background: "rgba(255,255,255,0.025)",
+              border: `1px solid color-mix(in srgb, ${C.ink} 10%, transparent)`,
               borderRadius: R.lg,
               padding: SP.x3,
               display: "flex",
@@ -656,8 +625,8 @@ function Pickers({ pick, onPick, disabled }: { pick: Pick; onPick: (p: Exclude<P
               height: H.chip,
               padding: `0 ${SP.x1_5}px`,
               borderRadius: R.md,
-              background: checked ? C.surface : "transparent",
-              boxShadow: checked ? "0 1px 2px color-mix(in srgb, #0E0E0F 14%, transparent)" : "none",
+              background: checked ? C.raised : "transparent",
+              boxShadow: checked ? "0 1px 0 rgba(255,255,255,0.06) inset, 0 2px 8px rgba(0,0,0,0.5)" : "none",
               ...T.label,
               fontFamily: SANS,
               color: checked ? C.ink : C.muted,
@@ -693,6 +662,15 @@ const TONE: Record<Done["outcome"], string> = {
   blocked: C.flagText,
   unavailable: C.neutralText,
   none: C.neutralText,
+};
+
+/** A soft glow in the outcome's tone; none for states that decided nothing. */
+const GLOW: Record<Done["outcome"], string> = {
+  allowed: "0 0 28px rgba(98, 214, 168, 0.35)",
+  review: "0 0 28px rgba(227, 180, 90, 0.35)",
+  blocked: "0 0 32px rgba(224, 85, 46, 0.55)",
+  unavailable: "none",
+  none: "none",
 };
 
 /** Must match the text /api/check sets when a verdict can't be parsed. */
@@ -776,7 +754,7 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
         justifyContent: "center",
       }}
     >
-      <div className="oa-head" style={{ fontFamily: SANS, ...T.h1, color: TONE[result.outcome] }}>
+      <div className="oa-head" style={{ fontFamily: SANS, ...T.h1, color: TONE[result.outcome], textShadow: GLOW[result.outcome] }}>
         {HEADLINE[result.outcome]}
       </div>
 

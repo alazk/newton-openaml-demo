@@ -16,11 +16,14 @@
  * Reduced motion pauses the SVG, leaving the static diagram.
  */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 
-const INK = "#0E0E0F";
-const HAIR = "#E3E3E4";
-const MUTED = "#6B6B6C";
+// Dark theme: boxes are near-black glass, a lit box outlines in white, the
+// pulses are white with a glow.
+const INK = "#F4F4F5";
+const HAIR = "#2A2A2D";
+const MUTED = "#A1A1A6";
+const BOX = "#0E0E10";
 const SANS = "var(--sans)";
 const MONO = "var(--mono)";
 
@@ -72,7 +75,7 @@ const T = {
 function Node({ b, caption, main, mono, lit, dur }: { b: Box; caption: string; main: string; mono?: boolean; lit?: [number, number]; dur: string }) {
   return (
     <g>
-      <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={14} fill="#FFFFFF" stroke={HAIR} strokeWidth={1.5}>
+      <rect x={b.x} y={b.y} width={b.w} height={b.h} rx={14} fill={BOX} stroke={HAIR} strokeWidth={1.5}>
         {lit && (
           <animate
             attributeName="stroke"
@@ -93,10 +96,10 @@ function Node({ b, caption, main, mono, lit, dur }: { b: Box; caption: string; m
   );
 }
 
-function Pulse({ path, span, dur, reverse }: { path: string; span: number[]; dur: string; reverse?: boolean }) {
+function Pulse({ path, span, dur, reverse, glow }: { path: string; span: number[]; dur: string; reverse?: boolean; glow: string }) {
   const [a, b] = span;
   return (
-    <circle r={5} fill={INK} opacity={0}>
+    <circle r={5} fill={INK} opacity={0} filter={`url(#${glow})`}>
       <animateMotion
         dur={dur}
         repeatCount="indefinite"
@@ -113,6 +116,7 @@ function Pulse({ path, span, dur, reverse }: { path: string; span: number[]; dur
 
 function Diagram({ L, address, dur, className }: { L: Layout; address: string; dur: string; className: string }) {
   const ref = useRef<SVGSVGElement>(null);
+  const glow = `g${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
   useEffect(() => {
     const svg = ref.current;
@@ -137,6 +141,15 @@ function Diagram({ L, address, dur, className }: { L: Layout; address: string; d
       aria-label="A transfer goes to Newton Protocol operators, who read OpenAML's data and sign a verdict on Ethereum Sepolia."
       style={{ display: undefined, overflow: "visible" }}
     >
+      <defs>
+        <filter id={glow} x="-200%" y="-200%" width="500%" height="500%">
+          <feGaussianBlur stdDeviation="4" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
       {[L.p1, L.p2, L.p3].map((d) => (
         <g key={d}>
           <path d={d} fill="none" stroke={HAIR} strokeWidth={1.5} />
@@ -149,7 +162,7 @@ function Diagram({ L, address, dur, className }: { L: Layout; address: string; d
       <Node b={L.verdict} caption="Signed on Sepolia" main="Verdict" dur={dur} lit={T.verdict as [number, number]} />
 
       <g>
-        <rect x={ops.x} y={ops.y} width={ops.w} height={ops.h} rx={14} fill="#FFFFFF" stroke={HAIR} strokeWidth={1.5}>
+        <rect x={ops.x} y={ops.y} width={ops.w} height={ops.h} rx={14} fill={BOX} stroke={HAIR} strokeWidth={1.5}>
           <animate
             attributeName="stroke"
             dur={dur}
@@ -180,10 +193,10 @@ function Diagram({ L, address, dur, className }: { L: Layout; address: string; d
         })}
       </g>
 
-      <Pulse path={L.p1} span={T.p1} dur={dur} />
-      <Pulse path={L.p2} span={T.p2} dur={dur} />
-      <Pulse path={L.p2} span={T.back} dur={dur} reverse />
-      <Pulse path={L.p3} span={T.p3} dur={dur} />
+      <Pulse path={L.p1} span={T.p1} dur={dur} glow={glow} />
+      <Pulse path={L.p2} span={T.p2} dur={dur} glow={glow} />
+      <Pulse path={L.p2} span={T.back} dur={dur} reverse glow={glow} />
+      <Pulse path={L.p3} span={T.p3} dur={dur} glow={glow} />
     </svg>
   );
 }

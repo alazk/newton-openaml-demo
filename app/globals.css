@@ -787,6 +787,7 @@ a {
    scrolls; on a phone it becomes part of the document. */
 .oa-stage {
   position: relative;
+  z-index: 1;
   /* Room for the nav and the section heading above it, so the whole card
      fits on screen after "Check a wallet" scrolls here. */
   height: clamp(600px, calc(100dvh - 190px), 820px);
@@ -894,4 +895,239 @@ a {
     opacity: 1;
     transition: none;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   Dark, cinematic theme. Overrides the light tokens above; keep it last.
+   Near-black from the landing-page-design palette, off-white text, the brand
+   red #9F3619 as the base of every glow, glass panels, film grain.
+   ════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  color-scheme: dark;
+  --ink: #f4f4f5;
+  --ink-2: #a1a1a6;
+  --field: #1a1a1c;
+  --surface: #000000;
+  --bone: #000000;
+  --hairline: #262628;
+  --border-strong: #5a5a5e;
+  --control: #3a3a3d;
+  --control-2: #3a3a3d;
+  --body: #a1a1a6;
+  --muted: #a1a1a6;
+  --muted-2: #86868b;
+  --disabled: #5a5a5e;
+  --pass: #2fbf85;
+  --flag: #e0552e;
+  --flag-wash: rgba(159, 54, 25, 0.3);
+  --error: #f2896b;
+  --caution: #e3b45a;
+  --accent: #f4f4f5;
+  --accent-hover: #d4d4d8;
+  --accent-tint: #1a1a1c;
+  --brand: #9f3619;
+  --glow: #e0552e;
+  --glass: rgba(255, 255, 255, 0.035);
+  --glass-edge: rgba(255, 255, 255, 0.09);
+}
+
+body {
+  background: #000;
+  color: var(--ink);
+}
+
+::selection {
+  background: rgba(159, 54, 25, 0.55);
+  color: #fff;
+}
+
+/* Film grain over everything, too faint to read as texture up close. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* White pill on black: the primary action. Text is black, not the light
+   theme's white. */
+.pe-dark {
+  color: #0a0a0a;
+}
+.pe-dark:disabled,
+.pe-dark[disabled] {
+  color: var(--disabled);
+}
+.skip-link {
+  color: #0a0a0a;
+}
+
+.oa-page {
+  background: #000;
+  position: relative;
+  overflow-x: clip;
+}
+
+/* Nav: dark glass. */
+.oa-nav {
+  background: rgba(14, 14, 16, 0.6);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 12px 40px rgba(0, 0, 0, 0.6);
+}
+
+/* Hero heading: white to grey, the dark variant of the one text gradient. */
+.oa-h1 {
+  font-size: clamp(3rem, 1.4rem + 5vw, 5.25rem);
+  background: linear-gradient(90deg, #ffffff 0%, #9b9b9b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+.oa-hero {
+  position: relative;
+  min-height: min(100dvh, 1000px);
+}
+
+/* Red light behind the globe and under the check, soft enough to read as
+   atmosphere rather than colour. */
+.oa-glow {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(60px);
+  background: radial-gradient(circle, rgba(159, 54, 25, 0.55) 0%, rgba(159, 54, 25, 0.18) 45%, transparent 70%);
+}
+
+/* Glass panels. */
+.oa-glass {
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 30px 80px rgba(0, 0, 0, 0.55);
+}
+
+.oa-stage {
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  -webkit-backdrop-filter: blur(20px) saturate(1.2);
+  backdrop-filter: blur(20px) saturate(1.2);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 40px 120px rgba(0, 0, 0, 0.6);
+}
+/* A thin red light along the stage's top edge. */
+.oa-stage::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(224, 85, 46, 0.85), transparent);
+  pointer-events: none;
+}
+@media (max-width: 640px), (max-height: 700px) {
+  .oa-stage {
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Inputs on dark. */
+.pe-input {
+  background: #050506;
+}
+.pe-input:hover:not(:focus) {
+  background: var(--field);
+}
+
+/* ── Globe ──────────────────────────────────────────────── */
+.oa-globe {
+  position: relative;
+  width: 100%;
+  max-width: 620px;
+  aspect-ratio: 1;
+  margin-inline: auto;
+  perspective: 1000px;
+}
+.oa-globe canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.oa-globe-chips {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 600ms var(--oa-e);
+  pointer-events: none;
+}
+.oa-globe-chip {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font: 500 13px/18px var(--sans);
+  color: var(--ink);
+  white-space: nowrap;
+  background: rgba(16, 16, 18, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: oaBob 5.6s ease-in-out infinite;
+  animation-delay: var(--bob, 0s);
+}
+.oa-globe-chip b {
+  font-weight: 500;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.oa-globe-chip i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: block;
+}
+@keyframes oaBob {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
+}
+@media (max-width: 640px) {
+  .oa-globe-chip {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .oa-globe-chip {
+    animation: none;
+  }
+  .oa-globe-chips {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Chip positions around the globe. Phones keep them clear of the edge. */
+.oa-chip-sanctioned { left: 16%; top: 18%; }
+.oa-chip-blocked { left: 84%; top: 30%; }
+.oa-chip-fraud { left: 12%; top: 74%; }
+.oa-chip-flagged { left: 80%; top: 82%; }
+@media (max-width: 640px) {
+  .oa-chip-sanctioned { left: 30%; top: 10%; }
+  .oa-chip-blocked { left: 74%; top: 24%; }
+  .oa-chip-fraud { left: 26%; top: 84%; }
+  .oa-chip-flagged { left: 68%; top: 93%; }
 }

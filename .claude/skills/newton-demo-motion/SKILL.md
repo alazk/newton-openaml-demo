@@ -127,7 +127,7 @@ Animate `stroke-dashoffset` from 1 to 0 on the JS clock. For pulses travelling a
 
 ## A4. Background
 
-The demos sit on flat surfaces: white `#FFFFFF` or bone `#FBFCFE`. When a design sits on a photo or texture instead, the background is part of the design:
+The demos are dark: a black `#000000` page with film grain and soft brand-red glows. The grain and glows are part of the background and follow every rule below. When a design sits on a photo or texture, the same applies:
 
 - It never moves, blurs, scales, fades or recolours, in any phase or variant.
 - Export the original image fill (`GET /v1/files/:key/images`) and apply its transform as CSS. Verify the background region above 45 dB PSNR.
@@ -225,6 +225,7 @@ After the intro, every visual acts out what it does, on a loop. A frame that loa
 | Coverage map, disc | The reach ring sweeps clockwise again, nodes light in turn |
 | Register or sheet (Pool Guard) | A highlight steps down the rows, the matching row lights, a pulse carries the verdict to the hook |
 | Counts ("364,503 addresses") | Count up to the exact real figure, landing on the design text |
+| Data globe | Already alive: it turns, the scan ring sweeps, red dots flare. Record it on the JS clock (drive its `t` from `__tick`), never by screen recording |
 
 **General stories:**
 
@@ -367,7 +368,7 @@ On the page, in `?capture`:
 |---|---|
 | `<demo>-x.mp4` | H.264, `yuv420p`, 60fps, CRF 14–15, `+faststart`, max 1920×1200, even dimensions. `-preset veryfast` by default, `slow` when the user asks for best quality |
 | `<demo>-loop.gif` | 960px wide, 15–20fps, about 2 to 3MB, for case study pages |
-| `<demo>-800x500.gif` | Always delivered; sized for demo library cards. Crop to the content with about 40px margin at exactly 1.6:1 when the frame has wide empty borders; otherwise fit and pad with the page background (`#FFFFFF`, or `#FBFCFE` for bone pages). 20fps, 12fps if heavy |
+| `<demo>-800x500.gif` | Always delivered; sized for demo library cards. Crop to the content with about 40px margin at exactly 1.6:1 when the frame has wide empty borders; otherwise fit and pad with the page background (`#000000` for the dark demos). 20fps, 12fps if heavy |
 
 ```bash
 ffmpeg -start_number $A -framerate 60 -i frames/%05d.png -frames:v $N \
@@ -422,7 +423,7 @@ After building, report:
 | Story start | 2.4s |
 | Verdict hold | at least 2.5s at rest |
 | Cycle | 12s, about 14–16s for a full demo check |
-| Page background | `#FFFFFF`, bone `#FBFCFE` |
+| Page background | `#000000` (dark demos) |
 | MP4 | 60fps, CRF 15, max 1920×1200 |
 | Website GIF | 960px wide, 20fps |
 | Card GIF | 800×500, 20fps |
