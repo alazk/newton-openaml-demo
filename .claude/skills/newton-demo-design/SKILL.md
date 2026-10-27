@@ -7,7 +7,7 @@ description: Visual and copy rules for building or restyling any Newton demo, th
 
 The system the Newton Protocol demos share (sanctions, Lazarus Scan, Pool Guard, OpenAML). It comes from the Newton Explorer token contract used in Lazarus Scan (`design/tokens.css`) and the sanctions demo's `DESIGN-SYSTEM.md`, plus a few rules borrowed from `landing-page-design` in [elayadesign/ai-design-skills](https://github.com/elayadesign/ai-design-skills) (MIT).
 
-The demos are educational. Their job is to make one Newton Protocol decision legible: what was checked, against what data, who signed it, and what happens next. Each demo is dark and cinematic: near-black with film grain and a brand-red glow, a glass nav, a gradient hero beside a 3D visual of the real data, a tagline that lights up as you scroll, then the working console on a glass panel. Conversion patterns (free trials, pricing, risk reversal, testimonial walls) do not apply. The reference build is the OpenAML demo (`components/Demo.tsx`, `components/CheckFlow.tsx`).
+The demos are educational. Their job is to make one Newton Protocol decision legible: what was checked, against what data, who signed it, and what happens next. Each demo is dark and cinematic: near-black with film grain and a brand-red glow, a glass nav, a gradient hero beside a 3D visual of the real data, a tagline that lights up as you scroll, then the working console on a glass panel. Conversion patterns (free trials, pricing, risk reversal, testimonial walls) do not apply. The reference build is the OpenAML demo (`components/Demo.tsx`, `components/DataGlobe.tsx`, `components/CheckFlow.tsx`, the dark layer at the end of `app/globals.css`).
 
 When a rule here conflicts with a framework default or another design skill, this file wins. When the user's explicit request conflicts with a rule, the user wins. When restyling an existing demo, read its own tokens file first; if it differs from this one, ask which wins before changing it.
 
@@ -96,7 +96,7 @@ Suisse Intl is the licensed brand face; **Inter** stands in until it is licensed
 
 **Floating glass nav:** fixed 16px from the top, centred with auto margins and `width: max-content` (never `left: 50%` plus a transform, which halves the width it can lay out in and pushes the logo out on phones). Pill shape, dark glass (`rgba(14,14,16,0.6)` over `backdrop-filter: blur(16px) saturate(1.4)`), white-at-10% border, deep shadow. Contents: the white Newton logo (`public/newton-logo-white.svg`, 18px, back to top; the black `newton-logo.svg` disappears on dark), white pill lockup with the demo name in black, pulsing dot plus "Sepolia" (caution colour and the age when data is stale), and a small primary "Check a wallet" button that scrolls to the check (hidden on phones).
 
-**Hero:** two columns from 1024px. Left: eyebrow ("A Newton Protocol demo"), gradient headline (max 680px, balanced), one lead paragraph (18px, 560px) naming the data, its size and who signs, one primary button that scrolls to the check, then the real tier or list counts as tone-coloured chips. Right: the data globe over a red glow, captioned underneath. A quiet proof line under the button names the network and the data licence. Top padding clears the nav (120px desktop, 104px below 1024).
+**Hero:** two columns from 1024px. Left: eyebrow ("A Newton Protocol demo"), gradient headline (max 680px, balanced), one lead paragraph (18px, 560px) naming the data, its size and who signs, one primary button that scrolls to the check, then a quiet proof line naming the network and the data licence. Right: the data globe over a red glow, captioned underneath; the real counts sit on the globe's floating chips. Top padding clears the nav (120px desktop, 104px below 1024).
 
 **Data globe (the hero's 3D visual):** the demo's real dataset as a slowly turning sphere of 2,600 points on a canvas with its own projection (no 3D library). Every dot stands for the same number of records, and colours follow the real counts: the common tier dim gold, the rare blocking tiers glowing brand red, so the picture is the true shape of the data. A red scan ring sweeps the globe and the red dots flare as it passes. The globe leans toward the pointer and the glass tier chips floating around it (name and real count each) move with it in 3D (`perspective`, `translateZ`) and bob gently. The caption states the scale ("about 140 addresses each") and the counts. Pauses off screen and in background tabs; reduced motion draws one still frame. For a demo without a list dataset, pick the visual that is equally literal about its data.
 
@@ -131,9 +131,9 @@ Nothing sits above the headline. Detail never rearranges the verdict. The addres
 
 ## 6. Components
 
-- **Primary button:** white pill, black `ui` text, 44px tall (48px and 16px text in the hero, 36px in the nav). Disabled is the sunken fill with disabled text, never a grey slab. While a check runs it stays dark with a light sweep band, and says what is happening ("Operators are checking the transfer…").
+- **Primary button:** white pill, black `ui` text, 44px tall (48px and 16px text in the hero, 36px in the nav). Disabled is the field fill with disabled text. While a check runs the stage switches to the running state rather than spinning the button.
 - **Outline button:** pill, 1px hairline, ink text, hover to sunken fill.
-- **Field:** visible label above (not just a placeholder), white fill, 1px disabled-grey border, 12px radius, mono text. Truncated to `0x1234…5678` at rest, whole on focus. Error: deny-colour border and an inline message.
+- **Field:** visible label above (not just a placeholder), `#050506` fill, 1px `#3A3A3D` border, 12px radius, mono text. Truncated to `0x1234…5678` at rest, whole on focus. Error: deny-colour border and an inline message.
 - **Segmented picks (radio group):** `#1A1A1C` track with 4px padding; selected option is a `#2A2A2D` raised pill with an inset top highlight. Arrow keys move, only the selected option is tabbable.
 - **Tag (a fact):** soft wash, no border, caption type. **Button (an action):** bordered or filled. They must never look the same.
 - **Icons:** Phosphor. Never Material.
@@ -157,19 +157,19 @@ Curve `--ease-newton: cubic-bezier(0.22, 1, 0.36, 1)` for transforms, `cubic-bez
 | Kind | From | Duration |
 |---|---|---|
 | `up` (text, rows, buttons) | `translateY(10px)`, `blur(4px)`, opacity 0 | 1.05s transform, 0.75s opacity and blur |
-| `card` (cards, the stage, the hero diagram) | `translateY(24px)`, `scale(0.985)`, `blur(6px)`, opacity 0 | same |
+| `card` (cards, the stage, the hero globe) | `translateY(24px)`, `scale(0.985)`, `blur(6px)`, opacity 0 | same |
 | `head` (verdict and running headlines) | `translateY(14px)`, `blur(10px)`, opacity 0 | 1s |
 | `pop` (chips) | `scale(0.86)`, `blur(4px)`, opacity 0 | 0.7s |
 | `left` (verdict rule rows) | `translateX(-10px)`, `blur(4px)`, opacity 0 | 0.8s |
 
 | Where | Sequence |
 |---|---|
-| Hero, on load | eyebrow 0.05s, headline 0.13s, lead 0.22s, button 0.31s, diagram card 0.3s, chips 0.4s |
+| Hero, on load | eyebrow 0.05s, headline 0.13s, lead 0.22s, globe 0.25s, button 0.31s, proof line 0.4s |
 | Check section, once 25% visible (`IntersectionObserver`) | heading, stage card 0.1s, policy card 0.24s, transfer card 0.33s |
 | Verdict, on mount | headline, reason 0.12s, "Listed by" 0.24s, chips from 0.32s every 0.08s, note 0.38s, rule rows 0.46s and 0.54s, actions 0.64s, parties 0.72s |
 | Running, on mount | headline, paragraph 0.12s, diagram 0.2s |
 
-Status dot pulses (opacity 1 to 0.3, 1.8s); the primary button carries a light sweep band while busy.
+Status dot pulses (opacity 1 to 0.3, 1.8s). The globe and the check diagram are the only continuous motion.
 
 Animate only `transform`, `opacity`, `filter` and `clip-path`; animated blur stays at 10px or less. `prefers-reduced-motion: reduce` shows every element in its final state from the first frame, lights every tagline word, pauses the diagram (`svg.pauseAnimations()`), and uses instant scrolling. For videos and GIFs of a demo, use the `newton-demo-motion` skill.
 
