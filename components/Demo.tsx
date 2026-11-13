@@ -374,7 +374,7 @@ const RUN_STEPS = [
   { title: "The transfer is sent", body: "This page sends the sender and the recipient to Newton Protocol as a task." },
   { title: "Operators run the policy", body: "Newton Protocol operators run the OpenAML policy on that transfer." },
   { title: "They read OpenAML's lists", body: "The policy looks both addresses up in a fixed copy of the lists, from two hosts that must agree." },
-  { title: "A quorum signs the answer", body: "The block rule and the review rule each get a verdict, signed on Ethereum Sepolia." },
+  { title: "A quorum signs the answer", body: "A quorum of operators signs the verdict on Ethereum Sepolia." },
 ];
 
 function Running({ to }: { to: string }) {
@@ -739,14 +739,14 @@ function explain(r: Done): { reason: string; note: string | null } {
     case "blocked":
       if (blockHits.length) {
         return {
-          reason: `OpenAML lists the recipient as ${joinTiers(blockHits)}: ${TIER_INFO[blockHits[0]].meaning}. The block rule denied the transfer, so it does not execute.`,
+          reason: `OpenAML lists the recipient as ${joinTiers(blockHits)}: ${TIER_INFO[blockHits[0]].meaning}. The policy denied the transfer, so it does not execute.`,
           note: null,
         };
       }
       if (fromTiers.some((t) => BLOCK_TIERS.includes(t))) {
-        return { reason: `OpenAML lists the sender as ${joinTiers(fromTiers.filter((t) => BLOCK_TIERS.includes(t)))}. The block rule denied the transfer, so it does not execute.`, note: null };
+        return { reason: `OpenAML lists the sender as ${joinTiers(fromTiers.filter((t) => BLOCK_TIERS.includes(t)))}. The policy denied the transfer, so it does not execute.`, note: null };
       }
-      return { reason: "The block rule denied the transfer, so it does not execute.", note: r.lookup ? disagree : noLookup };
+      return { reason: "The policy denied the transfer, so it does not execute.", note: r.lookup ? disagree : noLookup };
     case "review":
       if (reviewHits.length) {
         return {
@@ -757,10 +757,10 @@ function explain(r: Done): { reason: string; note: string | null } {
       if (fromTiers.includes("flagged")) {
         return { reason: "OpenAML lists the sender as Flagged. The transfer waits until a person approves it.", note: null };
       }
-      return { reason: "The review rule held the transfer until a person approves it.", note: r.lookup ? disagree : noLookup };
+      return { reason: "The policy held the transfer until a person approves it.", note: r.lookup ? disagree : noLookup };
     case "allowed":
       return {
-        reason: "The recipient is in none of the OpenAML tiers the policy acts on. Both rules allowed the transfer.",
+        reason: "The recipient is in none of the OpenAML tiers the policy acts on. The policy allowed the transfer.",
         note: null,
       };
     case "unavailable":
@@ -831,10 +831,9 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
         {note && <div className="oa-rise" style={{ ["--d" as string]: "0.38s", ...small(), color: C.body, marginTop: SP.x2, maxWidth: "54ch" }}>{note}</div>}
       </>
 
-      {/* The two signed verdicts behind the outcome, each with its attestation. */}
-      <div style={{ display: "flex", flexDirection: "column", gap: SP.x1, marginTop: SP.x4 }}>
-        <VerdictRow name="Block rule" side={result.block} delay={0.46} />
-        <VerdictRow name="Review rule" side={result.review} delay={0.54} />
+      {/* One verdict. It rests on two signed answers (block and review), linked as its attestations. */}
+      <div style={{ marginTop: SP.x4 }}>
+        <VerdictRow result={result} delay={0.46} />
       </div>
 
       <div className="pe-actions oa-rise" style={{ ["--d" as string]: "0.64s", display: "flex", alignItems: "center", gap: SP.x3, margin: `${SP.x3}px 0` }}>
@@ -863,12 +862,16 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
   );
 }
 
-function VerdictRow({ name, side, delay }: { name: string; side: Done["block"]; delay: number }) {
+function VerdictRow({ result, delay }: { result: Done; delay: number }) {
+  const o = result.outcome;
   // A denial that came from failing to screen is grey, not red (lib/outcome.ts).
-  const denied = side.allowed === false && !side.failClosed;
-  const text = side.allowed === true ? "Allow" : side.allowed === false ? (side.failClosed ? "Not screened" : "Deny") : "No answer";
-  const color = side.allowed === true ? C.passText : denied ? C.flagText : C.neutralText;
-  const wash = side.allowed === true ? C.passWash : denied ? C.flagWash : C.neutralWash;
+  const text = { allowed: "Allowed", blocked: "Blocked", review: "Held for review", unavailable: "Not screened", none: "No answer" }[o];
+  const color = o === "allowed" ? C.passText : o === "blocked" ? C.flagText : o === "review" ? C.caution : C.neutralText;
+  const wash = o === "allowed" ? C.passWash : o === "blocked" ? C.flagWash : o === "review" ? C.cautionWash : C.neutralWash;
+  // A block is proven by the block answer alone. Every other outcome needs both.
+  const sides = o === "blocked" ? [result.block] : [result.block, result.review];
+  const links = sides.map((x) => x.explorerUrl).filter((u): u is string => Boolean(u));
+  const linkStyle: React.CSSProperties = { ...small(), color: C.ink, textDecoration: "underline", textUnderlineOffset: 3, whiteSpace: "nowrap" };
   return (
     <div
       className="oa-left"
@@ -879,20 +882,32 @@ function VerdictRow({ name, side, delay }: { name: string; side: Done["block"]; 
         flexWrap: "wrap",
         columnGap: SP.x1_5,
         rowGap: SP.half,
-        padding: `${SP.x1}px ${SP.x1_5}px`,
+        padding: `${SP.x1_5}px ${SP.x2}px`,
         border: `${BORDER}px solid ${C.hairline}`,
         borderRadius: R.md,
       }}
     >
-      <span style={{ ...label(), color: C.ink, minWidth: 88 }}>{name}</span>
+      <span style={{ ...label(), color: C.ink }}>Signed verdict</span>
       <span style={{ ...small(), fontWeight: 500, color, background: wash, borderRadius: R.pill, padding: `${SP.half}px ${SP.x1_5}px`, whiteSpace: "nowrap" }}>{text}</span>
-      {side.explorerUrl ? (
-        <a href={side.explorerUrl} target="_blank" rel="noreferrer" style={{ ...small(), marginLeft: "auto", color: C.ink, textDecoration: "underline", textUnderlineOffset: 3, whiteSpace: "nowrap" }}>
-          Attestation ↗
-        </a>
-      ) : (
-        <span style={{ ...small(), marginLeft: "auto", color: C.muted }}>No attestation</span>
-      )}
+      <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: SP.x1_5 }}>
+        {links.length === 0 && <span style={{ ...small(), color: C.muted }}>No attestation</span>}
+        {links.length === 1 && (
+          <a href={links[0]} target="_blank" rel="noreferrer" style={linkStyle}>
+            Attestation ↗
+          </a>
+        )}
+        {links.length === 2 && (
+          <>
+            <span style={{ ...small(), color: C.muted }}>Attestations</span>
+            <a href={links[0]} target="_blank" rel="noreferrer" style={linkStyle} aria-label="First attestation">
+              1 ↗
+            </a>
+            <a href={links[1]} target="_blank" rel="noreferrer" style={linkStyle} aria-label="Second attestation">
+              2 ↗
+            </a>
+          </>
+        )}
+      </span>
     </div>
   );
 }
