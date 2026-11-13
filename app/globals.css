@@ -1131,3 +1131,59 @@ body::after {
   .oa-chip-fraud { left: 26%; top: 84%; }
   .oa-chip-flagged { left: 68%; top: 93%; }
 }
+
+/* ── Co-brand: Newton Protocol × FINOS ──────────────────── */
+/* The FINOS file is used as supplied (white, horizontal, with the name).
+   Heights are set so the two marks read at a similar weight. */
+.oa-cobrand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  line-height: 0;
+}
+.oa-cobrand img {
+  display: block;
+  width: auto;
+}
+.oa-cobrand .oa-logo-newton {
+  height: 18px;
+}
+.oa-cobrand .oa-logo-finos {
+  height: 30px;
+}
+.oa-cobrand-x {
+  font-family: var(--font-sans, Inter, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1;
+  color: #6e6e73;
+}
+.oa-cobrand-lg {
+  gap: 20px;
+  margin-bottom: 20px;
+}
+.oa-cobrand-lg .oa-logo-newton {
+  height: 24px;
+}
+.oa-cobrand-lg .oa-logo-finos {
+  height: 46px;
+}
+.oa-cobrand-lg .oa-cobrand-x {
+  font-size: 18px;
+}
+@media (max-width: 640px) {
+  .oa-cobrand {
+    gap: 8px;
+  }
+  .oa-cobrand .oa-logo-newton {
+    height: 15px;
+  }
+  .oa-cobrand .oa-logo-finos {
+    height: 26px;
+  }
+  .oa-cobrand-lg .oa-logo-newton {
+    height: 20px;
+  }
+  .oa-cobrand-lg .oa-logo-finos {
+    height: 40px;
+  }
+}

@@ -1,8 +1,9 @@
 # Newton OpenAML Demo
 
-Enter a recipient. Newton Protocol operators check the transfer against
-364,486 addresses labeled by [OpenAML](https://github.com/finos-labs/dtcch-2025-OpenAML)
-and sign the decision on Ethereum Sepolia before it would execute.
+Newton Protocol × FINOS. Enter a recipient. Newton Protocol operators check the
+transfer against 364,486 addresses labeled by
+[OpenAML](https://github.com/finos-labs/dtcch-2025-OpenAML), a FINOS Labs
+project, and sign the decision on Ethereum Sepolia before it would execute.
 
 | OpenAML tier | Addresses | What happens |
 | --- | --- | --- |
@@ -61,7 +62,7 @@ npm install
 node scripts/check-consistency.mjs          # pins, samples and counts agree
 node --experimental-strip-types scripts/test-outcome.mjs   # outcome and fail-closed rules
 cargo install regorus --example regorus --root ./regorus-bin
-REGORUS=./regorus-bin/bin/regorus node policy/openaml/test/run.mjs   # 30 policy cases
+REGORUS=./regorus-bin/bin/regorus node policy/openaml/test/run.mjs   # 33 policy cases
 node scripts/compile-client.mjs             # interface id 0xf67e14d6
 npm i --no-save ganache @newton-xyz/sdk@1.2.2 && node scripts/rehearse-deploy.mjs
 ```
@@ -69,35 +70,25 @@ npm i --no-save ganache @newton-xyz/sdk@1.2.2 && node scripts/rehearse-deploy.mj
 ## Going live
 
 Order matters: the oracle can only fetch the index once this repo is public on
-GitHub at the pinned commit.
+GitHub at the pinned commit (`e44a6dd`). Push without rewriting history.
 
-1. **Push** this repo to `github.com/alazk/newton-openaml-demo` (public) without
-   rewriting history, so commit `e44a6dd` exists there.
-2. **Check the index is served** from both hosts the oracle needs:
-   ```bash
-   curl -sI https://raw.githubusercontent.com/alazk/newton-openaml-demo/e44a6ddd9465d10ad481719acf05e4d75f18991b/index/shards/476.json | head -1
-   curl -sI https://cdn.jsdelivr.net/gh/alazk/newton-openaml-demo@e44a6ddd9465d10ad481719acf05e4d75f18991b/index/shards/476.json | head -1
-   ```
-3. **Build, simulate and deploy the policy** from `policy/` with `newton-cli`
-   (commands in `policy/openaml/README.md`). Simulate the `fraud` fixture with
-   `params.block.json` (must deny) and `clean` (must allow) first.
-4. **Deploy the two clients**, dry run first:
-   ```bash
-   node scripts/compile-client.mjs
-   NEWTON_POLICY=<policy address> node scripts/deploy-clients.mjs
-   read -rs OWNER_PRIVATE_KEY && export OWNER_PRIVATE_KEY
-   NEWTON_POLICY=<policy address> EXPECTED_OWNER=<wallet behind the API key> node scripts/deploy-clients.mjs --execute
-   ```
-   Addresses land in `policy/out/clients.sepolia.json`. Commit it.
-5. **Run real tasks** for all five fixtures listed at the top of
-   `scripts/task-test.mjs`. Each must land on its expected outcome.
-6. **Deploy the site** on Vercel with `NEWTON_API_KEY`, `POLICY_CLIENT_BLOCK`,
-   `POLICY_CLIENT_REVIEW` (see `.env.local.example`), then `bash deploy.sh "message"`.
+Then, on a Mac with `newton-cli` installed:
+
+```bash
+bash scripts/go-live.sh
+```
+
+It runs every step in order and stops at the first problem: checks the index is
+served from GitHub and jsDelivr, asks for the owner key and Newton API key
+without showing them, builds and simulates the policy (fraud must deny, clean
+must allow), deploys it, deploys the two clients after a dry run, runs the five
+fixtures in `scripts/task-test.mjs`, sets the Vercel env vars and deploys the
+site. Finished steps are recorded in `policy/out/` and skipped on a rerun.
 
 ## Design
 
 The page follows the `newton-demo-design` skill in `.claude/skills/`: deny is
-the brand red `#9F3619` on `#F8EAE4`, and a denial caused by unreadable data is
+the brand red `#9F3619` as a glow and wash on black, and a denial caused by unreadable data is
 shown grey as "Screening unavailable" (`lib/outcome.ts`), never as a match.
 `newton-demo-motion` in the same folder turns the demo into an MP4 for X and
 GIFs for the demo library. Claude Code loads both when working in this repo.
@@ -106,3 +97,6 @@ GIFs for the demo library. Claude Code loads both when working in this repo.
 
 OpenAML's data is Apache 2.0, Copyright 2025 FINOS. `index/` keeps their
 labels unchanged and credits the source commit.
+
+The FINOS name and logo are trademarks of FINOS, the Fintech Open Source
+Foundation. The Newton name and logo belong to Newton Protocol.

@@ -3,7 +3,7 @@
 import OpengraphImage from "./opengraph-image";
 
 export const alt =
-  "Newton OpenAML Demo: check a wallet before you pay it. Address labels from OpenAML, enforced by Newton Protocol.";
+  "Newton Protocol × FINOS: check a wallet before you pay it. Address labels from OpenAML, enforced by Newton Protocol.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

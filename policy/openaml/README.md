@@ -31,7 +31,7 @@ cargo install regorus --example regorus --root ./regorus-bin
 REGORUS=./regorus-bin/bin/regorus node policy/openaml/test/run.mjs
 ```
 
-30 cases: each tier under each client, a listed sender, one host down, every
+33 cases: each tier under each client, a listed sender, one host down, every
 failure that must deny, and wasm_args that try to swap the payee.
 
 ## Build and simulate

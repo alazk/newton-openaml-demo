@@ -226,24 +226,11 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 function Nav({ onHome, onCheck }: { onHome: () => void; onCheck: () => void }) {
   return (
     <header className="oa-nav">
-      <button type="button" onClick={onHome} className="pe-reset" aria-label="Back to the top" style={{ display: "block", lineHeight: 0 }}>
-        <img src="/newton-logo-white.svg" alt="Newton" style={{ height: 18, display: "block" }} />
+      <button type="button" onClick={onHome} className="pe-reset oa-cobrand" aria-label="Newton Protocol and FINOS. Back to the top">
+        <img src="/newton-logo-white.svg" alt="" className="oa-logo-newton" />
+        <span className="oa-cobrand-x" aria-hidden>×</span>
+        <img src="/finos-logo-white.svg" alt="" className="oa-logo-finos" />
       </button>
-      <span
-        style={{
-          background: C.ink,
-          color: C.surface,
-          fontFamily: SANS,
-          ...T.monoSm,
-          fontWeight: 500,
-          letterSpacing: "0.14em",
-          textTransform: "uppercase",
-          borderRadius: R.pill,
-          padding: `6px ${SP.x1_5}px`,
-        }}
-      >
-        OpenAML
-      </span>
       <span style={{ display: "flex", alignItems: "center", gap: SP.x1, paddingInline: SP.half }} title="Verdicts are signed on Ethereum Sepolia">
         <span className="pe-pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: C.pass, display: "block" }} />
         <span style={{ ...label(), color: C.ink }}>Sepolia</span>
@@ -273,14 +260,14 @@ function Hero({ onCheck }: { onCheck: () => void }) {
     <section className={`oa-wrap oa-hero ${on ? "oa-on" : ""}`} aria-labelledby="hero-title">
       <div>
         <div className="oa-in" style={{ ["--d" as string]: "0.05s" }}>
-          <Eyebrow>A Newton Protocol demo</Eyebrow>
+          <Eyebrow>Newton Protocol × FINOS</Eyebrow>
         </div>
         <h1 id="hero-title" className="oa-h1 oa-in" style={{ ["--d" as string]: "0.13s", marginTop: SP.x2, fontFamily: SANS }}>
           Check a wallet before you pay it.
         </h1>
         <p className="oa-lead oa-in" style={{ ["--d" as string]: "0.22s", fontFamily: SANS }}>
-          This demo screens a transfer against {fmt(TOTAL_ADDRESSES)} addresses labeled by OpenAML, the open source AML
-          project at FINOS. Newton Protocol operators run the check and sign the result on Ethereum Sepolia before the
+          This demo screens a transfer against {fmt(TOTAL_ADDRESSES)} addresses labeled by OpenAML, an open source AML
+          project in FINOS Labs. Newton Protocol operators run the check and sign the result on Ethereum Sepolia before the
           transfer executes.
         </p>
         <div className="oa-in" style={{ ["--d" as string]: "0.31s", marginTop: SP.x4 }}>
@@ -294,7 +281,7 @@ function Hero({ onCheck }: { onCheck: () => void }) {
           </button>
         </div>
         <p className="oa-in" style={{ ["--d" as string]: "0.4s", margin: `${SP.x4}px 0 0`, ...small(), color: C.muted2 }}>
-          Signed on Ethereum Sepolia · Data from OpenAML (FINOS, Apache 2.0)
+          Signed on Ethereum Sepolia · Data from OpenAML (FINOS Labs, Apache 2.0)
         </p>
       </div>
 
@@ -399,13 +386,20 @@ function Running({ to }: { to: string }) {
 function Footer() {
   const link: React.CSSProperties = { textDecoration: "underline", textUnderlineOffset: 3 };
   return (
-    <footer className="oa-wrap" style={{ paddingBlock: SP.x4, borderTop: `1px solid ${C.hairline}` }}>
+    <footer className="oa-wrap oa-footer" style={{ paddingBlock: SP.x4, borderTop: `1px solid ${C.hairline}` }}>
+      <div className="oa-cobrand oa-cobrand-lg">
+        <img src="/newton-logo-white.svg" alt="Newton Protocol" className="oa-logo-newton" />
+        <span className="oa-cobrand-x" aria-hidden>×</span>
+        <a href="https://www.finos.org" target="_blank" rel="noreferrer" aria-label="FINOS, the Fintech Open Source Foundation">
+          <img src="/finos-logo-white.svg" alt="" className="oa-logo-finos" />
+        </a>
+      </div>
       <p style={{ margin: 0, ...small(), color: C.muted, lineHeight: 1.7 }}>
         A Newton Protocol demo on Ethereum Sepolia. Data:{" "}
         <a href={`${OPENAML_REPO_URL}/tree/${OPENAML_COMMIT}/Data`} target="_blank" rel="noreferrer" style={link}>
           OpenAML lists
         </a>{" "}
-        (FINOS, Apache 2.0), commit {OPENAML_COMMIT.slice(0, 7)}. Policy and site:{" "}
+        (FINOS Labs, Apache 2.0), commit {OPENAML_COMMIT.slice(0, 7)}. Policy and site:{" "}
         <a href="https://github.com/alazk/newton-openaml-demo" target="_blank" rel="noreferrer" style={link}>
           github.com/alazk/newton-openaml-demo
         </a>
@@ -455,7 +449,7 @@ function Console(props: {
             <span style={{ fontFamily: SANS, ...T.h3 }}>OpenAML Address Screening</span>
             <div style={{ ...T.value, fontFamily: SANS, color: C.body, marginTop: SP.x2, maxWidth: "48ch" }}>
               Checks the transfer against {fmt(TOTAL_ADDRESSES)} addresses labeled by OpenAML, an open
-              source AML project at FINOS. Newton Protocol operators run the check and sign the result
+              source AML project in FINOS Labs. Newton Protocol operators run the check and sign the result
               before the transfer executes.
             </div>
 
