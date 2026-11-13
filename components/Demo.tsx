@@ -909,15 +909,17 @@ function VerdictRow({ result, delay }: { result: Done; delay: number }) {
       <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", columnGap: SP.x1_5, rowGap: SP.half }}>
         <span style={{ ...label(), color: C.ink }}>Signed verdict</span>
         <span style={{ ...small(), fontWeight: 500, color, background: wash, borderRadius: R.pill, padding: `${SP.half}px ${SP.x1_5}px`, whiteSpace: "nowrap" }}>{text}</span>
-        {url ? (
-          <a href={url} target="_blank" rel="noreferrer" style={{ ...small(), marginLeft: "auto", color: C.ink, textDecoration: "underline", textUnderlineOffset: 3, whiteSpace: "nowrap" }}>
-            Attestation ↗
-          </a>
-        ) : (
-          <span style={{ ...small(), marginLeft: "auto", color: C.muted }}>No attestation</span>
-        )}
       </div>
       <div style={{ ...small(), color: C.muted, marginTop: SP.x1 }}>Your rule: block {joinTiers(result.deny)}.</div>
+      {url ? (
+        <a href={url} target="_blank" rel="noreferrer" className="oa-explorer">
+          <img src="/newton-symbol-bone.svg" alt="" />
+          View attestation on the Newton Explorer
+          <span aria-hidden>↗</span>
+        </a>
+      ) : (
+        <div style={{ ...small(), color: C.muted, marginTop: SP.x1_5 }}>No attestation was returned for this check.</div>
+      )}
     </div>
   );
 }
