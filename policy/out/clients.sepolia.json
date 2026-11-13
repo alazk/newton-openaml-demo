@@ -1,0 +1,32 @@
+{
+  "block": {
+    "address": "0x33494B509f7D29dC7D35D774DCae8F01B527266d",
+    "env": "POLICY_CLIENT_BLOCK",
+    "params": {
+      "deny_tiers": [
+        "sanctioned",
+        "blocked",
+        "fraud"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0xb9e91d47a5b6ef29ee25a917c03e45862d6bb4555952c19b48b1c76a32ac6bb4",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:04:14.299Z"
+  },
+  "review": {
+    "address": "0x445271510cfcf46e7F543B12024Ca65879fA8C0a",
+    "env": "POLICY_CLIENT_REVIEW",
+    "params": {
+      "deny_tiers": [
+        "flagged"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x33dfd7d3cef18d5c63564dab11cf9e598f7005809966ae14a141fc2882f05403",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:04:38.958Z"
+  }
+}

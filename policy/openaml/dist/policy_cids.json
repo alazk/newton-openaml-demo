@@ -1,0 +1,10 @@
+{
+  "entrypoint": "newton_openaml.allow",
+  "policyCid": "bafkreiabdvtiamnctdy3f5c5cdg4tdef6dvdyyrrok4l3ic73l5ngmx4y4",
+  "policyCodeHash": "0x3b8cc8d7116302ec87177141322a4f42de2d2800183d6a84dfa166fd6a4fc62d",
+  "policyDataMetadataCid": "",
+  "policyMetadataCid": "bafkreici2kh2f5xo7e3yz6xx75x54zus3v6yc4p6mz6pqctlqhf2bfwxta",
+  "schemaCid": "bafkreidjicd5ric6gjj4yodnlfd3xjt7lf5fxs56m7pjlvbsaz3jq7fdsm",
+  "secretsSchemaCid": "",
+  "wasmCid": "bafkreigauav2h7teuxkthn4gaaycldm2l3lciidezfuk76ydvrnpv67g5m"
+}
