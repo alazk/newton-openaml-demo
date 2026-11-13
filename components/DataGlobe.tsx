@@ -63,9 +63,19 @@ function buildPoints(): Pt[] {
   return pts;
 }
 
-export default function DataGlobe() {
+type Focus = Tier | "clean" | null;
+
+/**
+ * deny:  the lists the visitor's rule blocks. Their chips turn red.
+ * focus: the kind of wallet just picked. One dot of that kind flares.
+ * kick:  bump it to make the scan ring sweep the globe once, top to bottom.
+ */
+export default function DataGlobe({ deny = [], focus = null, kick = 0 }: { deny?: Tier[]; focus?: Focus; kick?: number }) {
   const wrap = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  // Read by the draw loop, so a new pick never restarts the animation.
+  const live = useRef<{ kick: number; focus: Focus }>({ kick, focus });
+  live.current = { kick, focus };
 
   useEffect(() => {
     const el = wrap.current;
@@ -88,6 +98,12 @@ export default function DataGlobe() {
       ty = 0,
       cx = 0,
       cy = 0;
+    // One sweep of the ring and one flaring dot, started by a new kick.
+    const SWEEP = 1.1;
+    const FLARE = 1.9;
+    let seenKick = live.current.kick;
+    let kickAt = -10;
+    let flare: Pt | null = null;
 
     const resize = () => {
       dpr = Math.min(2, window.devicePixelRatio || 1);
@@ -123,7 +139,11 @@ export default function DataGlobe() {
         sinA = Math.sin(yaw);
       const cosT = Math.cos(tilt),
         sinT = Math.sin(tilt);
-      const scanY = Math.cos(t * 0.9) * 0.92; // the scan ring's latitude
+      const since = t - kickAt;
+      const sweeping = since < SWEEP;
+      const ease = (p: number) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+      // The scan ring's latitude: its slow drift, or one pass from top to bottom.
+      const scanY = sweeping ? 0.94 - ease(since / SWEEP) * 1.88 : Math.cos(t * 0.9) * 0.92;
       const project = (x: number, y: number, z: number) => {
         const x1 = x * cosA + z * sinA;
         const z1 = -x * sinA + z * cosA;
@@ -159,9 +179,9 @@ export default function DataGlobe() {
           }
           ctx.lineTo(q.sx, q.sy);
         }
-        ctx.strokeStyle = pass === 1 ? "rgba(214,179,118,0.8)" : "rgba(214,179,118,0.2)";
-        ctx.shadowColor = "rgba(224,85,46,0.9)";
-        ctx.shadowBlur = pass === 1 ? 12 : 0;
+        ctx.strokeStyle = pass === 1 ? `rgba(214,179,118,${sweeping ? 1 : 0.8})` : "rgba(214,179,118,0.2)";
+        ctx.shadowColor = "rgba(214,179,118,0.9)";
+        ctx.shadowBlur = pass === 1 ? (sweeping ? 22 : 12) : 0;
         ctx.stroke();
       }
       ctx.shadowBlur = 0;
@@ -182,6 +202,45 @@ export default function DataGlobe() {
         ctx.fill();
       }
       ctx.shadowBlur = 0;
+
+      // The picked wallet's kind: one dot swells and sends out a ring.
+      if (flare && since < FLARE) {
+        const q = project(flare.x, flare.y, flare.z);
+        const p = since / FLARE;
+        const c = flare.red ? RED : GOLD;
+        const fade = Math.sin(Math.PI * Math.min(1, p * 1.05));
+        ctx.shadowColor = `rgba(${c[0]},${c[1]},${c[2]},0.95)`;
+        ctx.shadowBlur = 26;
+        ctx.fillStyle = `rgba(${c[0]},${c[1]},${c[2]},${(0.95 * fade).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(q.sx, q.sy, (3 + 4 * fade) * q.p, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = `rgba(${c[0]},${c[1]},${c[2]},${(0.7 * (1 - p)).toFixed(3)})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(q.sx, q.sy, (6 + 44 * p) * q.p, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    };
+
+    // The dot of the picked kind nearest the middle of the side facing us.
+    const pickFlare = (f: Focus): Pt | null => {
+      if (!f || f === "clean") return null;
+      const wantRed = SEVERE_TIERS.includes(f);
+      const yaw = spin + cy * 0.4;
+      let best: Pt | null = null;
+      let bestScore = -Infinity;
+      for (const pt of pts) {
+        if (pt.red !== wantRed) continue;
+        const depth = -pt.x * Math.sin(yaw) + pt.z * Math.cos(yaw);
+        const score = depth - Math.abs(pt.y) * 0.6;
+        if (score > bestScore) {
+          bestScore = score;
+          best = pt;
+        }
+      }
+      return best;
     };
 
     const tick = (now: number) => {
@@ -192,6 +251,11 @@ export default function DataGlobe() {
       spin += dt * 0.12;
       cx += (tx - cx) * Math.min(1, dt * 3);
       cy += (ty - cy) * Math.min(1, dt * 3);
+      if (live.current.kick !== seenKick) {
+        seenKick = live.current.kick;
+        kickAt = t;
+        flare = pickFlare(live.current.focus);
+      }
       draw();
       if (visible && !document.hidden) raf = requestAnimationFrame(tick);
     };
@@ -264,17 +328,20 @@ export default function DataGlobe() {
       <div className="oa-globe-chips">
         {chips.map((c) => {
           const red = SEVERE_TIERS.includes(c.tier);
+          const blocked = deny.includes(c.tier);
           return (
             <span
               key={c.tier}
-              className={`oa-globe-chip oa-chip-${c.tier}`}
+              className={`oa-globe-chip oa-chip-${c.tier} ${blocked ? "is-blocked" : ""} ${focus === c.tier ? "is-focus" : ""}`}
               style={{
                 transform: `translate(-50%, -50%) translateZ(${c.z}px)`,
                 ["--bob" as string]: c.bob,
               }}
             >
-              <i style={{ background: red ? "#FEFDF9" : "#D6B376", boxShadow: `0 0 10px ${red ? "rgba(254,253,249,0.8)" : "rgba(227,180,90,0.6)"}` }} />
+              <i style={{ background: red ? "#FEFDF9" : "#D6B376", boxShadow: `0 0 10px ${red ? "rgba(254,253,249,0.8)" : "rgba(214,179,118,0.6)"}` }} />
               {TIER_INFO[c.tier].name} <b>{TIER_COUNTS[c.tier].toLocaleString("en-US")}</b>
+              {/* Keyed by state so the label pops each time its switch flips. */}
+              <em key={String(blocked)}>{blocked ? "Block" : "Allow"}</em>
             </span>
           );
         })}
