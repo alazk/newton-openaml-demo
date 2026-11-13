@@ -228,21 +228,16 @@ function Nav({ onHome, onCheck }: { onHome: () => void; onCheck: () => void }) {
     <header className="oa-nav">
       <button type="button" onClick={onHome} className="pe-reset oa-cobrand" aria-label="Newton Protocol and FINOS. Back to the top">
         <img src="/newton-logo-white.svg" alt="" className="oa-logo-newton" />
-        <span className="oa-cobrand-x" aria-hidden>×</span>
-        <img src="/finos-logo-white.svg" alt="" className="oa-logo-finos" />
+        <span className="oa-cobrand-rule" aria-hidden />
+        <span className="oa-finos-row">
+          <img src="/finos-icon-white.svg" alt="" className="oa-finos-icon" />
+          <img src="/finos-wordmark-white.svg" alt="" className="oa-finos-word" />
+        </span>
       </button>
-      <span style={{ display: "flex", alignItems: "center", gap: SP.x1, paddingInline: SP.half }} title="Verdicts are signed on Ethereum Sepolia">
+      <span style={{ display: "flex", alignItems: "center", gap: SP.x1 }} title="Verdicts are signed on Ethereum Sepolia">
         <span className="pe-pulse" style={{ width: 7, height: 7, borderRadius: "50%", background: C.pass, display: "block" }} />
-        <span style={{ ...label(), color: C.ink }}>Sepolia</span>
+        <span style={{ ...label(), color: C.muted }}>Sepolia</span>
       </span>
-      <button
-        type="button"
-        onClick={onCheck}
-        className="pe-reset pe-dark oa-nav-cta"
-        style={{ height: 36, padding: `0 ${SP.x2}px`, borderRadius: R.pill, ...label(), display: "inline-flex", alignItems: "center" }}
-      >
-        Check a wallet
-      </button>
     </header>
   );
 }

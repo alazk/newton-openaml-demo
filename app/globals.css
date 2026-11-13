@@ -1187,3 +1187,49 @@ body::after {
     height: 40px;
   }
 }
+
+/* Nav lockup: Newton | FINOS mark and wordmark on one line, a hairline between. */
+.oa-nav {
+  gap: 20px;
+  padding: 12px 22px;
+}
+.oa-nav .oa-cobrand {
+  gap: 16px;
+}
+.oa-nav .oa-logo-newton {
+  height: 18px;
+}
+.oa-cobrand-rule {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.18);
+}
+.oa-finos-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.oa-cobrand .oa-finos-icon {
+  height: 20px;
+}
+.oa-cobrand .oa-finos-word {
+  height: 11px;
+}
+@media (max-width: 640px) {
+  .oa-nav {
+    gap: 14px;
+    padding: 10px 16px;
+  }
+  .oa-nav .oa-cobrand {
+    gap: 12px;
+  }
+  .oa-nav .oa-logo-newton {
+    height: 16px;
+  }
+  .oa-cobrand .oa-finos-icon {
+    height: 18px;
+  }
+  .oa-cobrand .oa-finos-word {
+    height: 10px;
+  }
+}
