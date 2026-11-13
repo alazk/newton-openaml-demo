@@ -19,7 +19,7 @@ import { join } from "node:path";
  */
 
 export const alt =
-  "Newton Protocol × FINOS: check a wallet before you pay it. Address labels from OpenAML, enforced by Newton Protocol.";
+  "Newton Protocol × FINOS OpenAML: check a wallet before you pay it. Address labels from OpenAML, enforced by Newton Protocol.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -114,6 +114,7 @@ export default async function OpengraphImage() {
           </svg>
           <span style={{ fontSize: 24, color: MUTED }}>×</span>
           {finos ? <img src={finos} width={111} height={48} alt="" /> : <span style={{ fontSize: 24, fontWeight: 500, color: INK }}>FINOS</span>}
+          <span style={{ fontSize: 26, color: INK, marginLeft: -2 }}>OpenAML</span>
         </div>
 
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>

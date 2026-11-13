@@ -16,7 +16,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import CheckFlow from "@/components/CheckFlow";
+import CheckFlow, { RUN_LOOP_MS, STEP_STARTS } from "@/components/CheckFlow";
 import DataGlobe, { globeLegend } from "@/components/DataGlobe";
 import { C, H, R, SP, T, BORDER, INSET_X } from "@/lib/ds";
 import {
@@ -67,23 +67,39 @@ export default function Demo() {
   const [run, setRun] = useState<Run>({ status: "idle" });
   const stageRef = useRef<HTMLDivElement>(null);
   const checkRef = useRef<HTMLElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   const checkOn = useReveal(checkRef);
 
   const valid = isAddress(to);
   const busy = run.status === "running";
   const ready = valid && !busy;
 
+  /**
+   * Put the check (heading and card) in the middle of the space under the
+   * nav. If it is taller than that space, line its top up under the nav.
+   */
+  function centerCheck() {
+    const el = frameRef.current;
+    if (!el) return;
+    const NAV = 76;
+    const r = el.getBoundingClientRect();
+    const space = window.innerHeight - NAV;
+    const offset = r.height <= space - 16 ? NAV + (space - r.height) / 2 : NAV + 12;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: Math.max(0, window.scrollY + r.top - offset), behavior: reduce ? "auto" : "smooth" });
+  }
+
+  // Every change of screen (form, running, verdict) is centred again, so the
+  // visitor never has to scroll to find it.
+  const firstRun = useRef(true);
   useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
-    if (run.status === "done") stage.focus({ preventScroll: true });
-    // On a phone the stage is part of the page: when it changes state, bring
-    // the section back below the floating nav. Scroll to the section, not the
-    // stage, so its heading is not left showing through the glass nav.
-    if ((run.status === "running" || run.status === "done") && stage.getBoundingClientRect().top < 80) {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      document.getElementById("check")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    if (firstRun.current) {
+      firstRun.current = false;
+      return;
     }
+    if (run.status === "done") stageRef.current?.focus({ preventScroll: true });
+    const id = requestAnimationFrame(centerCheck);
+    return () => cancelAnimationFrame(id);
   }, [run.status]);
 
   function onTo(v: string) {
@@ -100,12 +116,19 @@ export default function Demo() {
   async function check() {
     if (!ready) return;
     setRun({ status: "running" });
+    // Stay on the running screen for one full pass of the diagram, so there is
+    // time to read what is happening. Skipped under reduced motion.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const shown = new Promise((r) => setTimeout(r, reduce ? 0 : RUN_LOOP_MS));
     try {
-      const res = await fetch("/api/check", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ to }),
-      });
+      const [res] = await Promise.all([
+        fetch("/api/check", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ to }),
+        }),
+        shown,
+      ]);
       const json = (await res.json().catch(() => null)) as CheckResponse | null;
       if (!json) return setRun({ status: "error", message: "The check did not return a readable answer." });
       if (!json.ok) return setRun({ status: "error", message: json.error });
@@ -120,8 +143,7 @@ export default function Demo() {
   }
 
   function goToCheck() {
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    document.getElementById("check")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    centerCheck();
   }
 
   return (
@@ -145,10 +167,11 @@ export default function Demo() {
           style={{ position: "relative", paddingTop: SP.x6, paddingBottom: SP.x8, scrollMarginTop: 88 }}
         >
           <div className="oa-glow" aria-hidden style={{ width: "70%", height: "60%", left: "15%", top: "30%", opacity: 0.55 }} />
+          <div ref={frameRef}>
           <div className="oa-in" style={{ position: "relative", zIndex: 1, marginBottom: SP.x3 }}>
             <Eyebrow>Try it</Eyebrow>
             <h2 id="check-title" style={{ margin: `${SP.x1}px 0 0`, fontFamily: SANS, ...T.h2, color: C.ink }}>
-              Check a transfer
+              Check a wallet
             </h2>
           </div>
 
@@ -180,6 +203,7 @@ export default function Demo() {
                 onCheck={check}
               />
             )}
+          </div>
           </div>
         </section>
       </main>
@@ -226,12 +250,13 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 function Nav({ onHome, onCheck }: { onHome: () => void; onCheck: () => void }) {
   return (
     <header className="oa-nav">
-      <button type="button" onClick={onHome} className="pe-reset oa-cobrand" aria-label="Newton Protocol and FINOS. Back to the top">
+      <button type="button" onClick={onHome} className="pe-reset oa-cobrand" aria-label="Newton Protocol and FINOS OpenAML. Back to the top">
         <img src="/newton-logo-white.svg" alt="" className="oa-logo-newton" />
         <span className="oa-cobrand-rule" aria-hidden />
         <span className="oa-finos-row">
           <img src="/finos-icon-white.svg" alt="" className="oa-finos-icon" />
           <img src="/finos-wordmark-white.svg" alt="" className="oa-finos-word" />
+          <span className="oa-openaml">OpenAML</span>
         </span>
       </button>
       <span style={{ display: "flex", alignItems: "center", gap: SP.x1 }} title="Verdicts are signed on Ethereum Sepolia">
@@ -255,7 +280,7 @@ function Hero({ onCheck }: { onCheck: () => void }) {
     <section className={`oa-wrap oa-hero ${on ? "oa-on" : ""}`} aria-labelledby="hero-title">
       <div>
         <div className="oa-in" style={{ ["--d" as string]: "0.05s" }}>
-          <Eyebrow>Newton Protocol × FINOS</Eyebrow>
+          <Eyebrow>Newton Protocol × FINOS OpenAML</Eyebrow>
         </div>
         <h1 id="hero-title" className="oa-h1 oa-in" style={{ ["--d" as string]: "0.13s", marginTop: SP.x2, fontFamily: SANS }}>
           Check a wallet before you pay it.
@@ -345,31 +370,59 @@ function Tagline() {
 
 /* ── Running: the diagram plays while operators check ───── */
 
+const RUN_STEPS = [
+  { title: "The transfer is sent", body: "This page sends the sender and the recipient to Newton Protocol as a task." },
+  { title: "Operators run the policy", body: "Newton Protocol operators run the OpenAML policy on that transfer." },
+  { title: "They read OpenAML's lists", body: "The policy looks both addresses up in a fixed copy of the lists, from two hosts that must agree." },
+  { title: "A quorum signs the answer", body: "The block rule and the review rule each get a verdict, signed on Ethereum Sepolia." },
+];
+
 function Running({ to }: { to: string }) {
+  // Which step the diagram is on. Follows the diagram's own loop; under
+  // reduced motion the diagram is still, so every step shows the same.
+  const [active, setActive] = useState<number | null>(0);
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setActive(null);
+      return;
+    }
+    const t0 = performance.now();
+    const id = setInterval(() => {
+      const f = ((performance.now() - t0) % RUN_LOOP_MS) / RUN_LOOP_MS;
+      let i = 0;
+      STEP_STARTS.forEach((s, n) => {
+        if (f >= s) i = n;
+      });
+      setActive(i);
+    }, 100);
+    return () => clearInterval(id);
+  }, []);
+
   return (
-    <div
-      style={{
-        flex: 1,
-        width: "100%",
-        maxWidth: 880,
-        marginInline: "auto",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        gap: SP.x5,
-        padding: `${SP.x5}px ${INSET_X}`,
-      }}
-    >
+    <div className="oa-run">
       <div>
         <div className="oa-head" style={{ fontFamily: SANS, ...T.h1, color: C.ink }}>
-          Checking the transfer
+          Checking the wallet
         </div>
-        <p className="oa-rise" style={{ ["--d" as string]: "0.12s", margin: `${SP.x2}px 0 0`, fontFamily: SANS, ...T.valueLg, color: C.body, maxWidth: "56ch" }}>
-          Newton Protocol operators are checking this recipient against OpenAML&apos;s lists. The block rule and the review
-          rule run at the same time, and each result is signed on Ethereum Sepolia.
-        </p>
+        <ol className="oa-steps oa-rise" style={{ ["--d" as string]: "0.12s" }}>
+          {RUN_STEPS.map((s, i) => (
+            <li key={s.title} className={active === null || active === i ? "is-on" : ""}>
+              <span className="oa-step-n" aria-hidden>
+                {i + 1}
+              </span>
+              <span>
+                <span className="oa-step-t" style={{ fontFamily: SANS }}>
+                  {s.title}
+                </span>
+                <span className="oa-step-b" style={{ fontFamily: SANS }}>
+                  {s.body}
+                </span>
+              </span>
+            </li>
+          ))}
+        </ol>
       </div>
-      <div className="oa-card-in" style={{ ["--d" as string]: "0.2s" }}>
+      <div className="oa-card-in oa-run-flow" style={{ ["--d" as string]: "0.2s" }}>
         <CheckFlow address={`${to.slice(0, 6)}…${to.slice(-4)}`} speed="running" />
       </div>
     </div>
@@ -384,9 +437,11 @@ function Footer() {
     <footer className="oa-wrap oa-footer" style={{ paddingBlock: SP.x4, borderTop: `1px solid ${C.hairline}` }}>
       <div className="oa-cobrand oa-cobrand-lg">
         <img src="/newton-logo-white.svg" alt="Newton Protocol" className="oa-logo-newton" />
-        <span className="oa-cobrand-x" aria-hidden>×</span>
-        <a href="https://www.finos.org" target="_blank" rel="noreferrer" aria-label="FINOS, the Fintech Open Source Foundation">
-          <img src="/finos-logo-white.svg" alt="" className="oa-logo-finos" />
+        <span className="oa-cobrand-rule" aria-hidden />
+        <a href={OPENAML_REPO_URL} target="_blank" rel="noreferrer" aria-label="FINOS OpenAML on GitHub" className="oa-finos-row">
+          <img src="/finos-icon-white.svg" alt="" className="oa-finos-icon" />
+          <img src="/finos-wordmark-white.svg" alt="" className="oa-finos-word" />
+          <span className="oa-openaml">OpenAML</span>
         </a>
       </div>
       <p style={{ margin: 0, ...small(), color: C.muted, lineHeight: 1.7 }}>
@@ -537,7 +592,7 @@ function Console(props: {
               cursor: ready ? "pointer" : busy ? "progress" : "not-allowed",
             }}
           >
-            {busy ? "Operators are checking the transfer…" : "Check this transfer"}
+            {busy ? "Operators are checking the wallet…" : "Check this wallet"}
           </button>
         </div>
       </div>

@@ -5,7 +5,7 @@ import "./globals.css";
 // Self-hosted (the same file Lazarus Scan ships), so the build never waits on Google Fonts.
 const sans = localFont({ src: "./inter-latin.woff2", variable: "--font-sans", display: "swap", weight: "400 500" });
 
-const TITLE = "OpenAML Screening Demo · Newton Protocol × FINOS";
+const TITLE = "Newton Protocol × FINOS OpenAML: wallet screening demo";
 
 const DESCRIPTION =
   "Check a wallet before you pay it. The transfer is screened against 364,486 addresses labeled by OpenAML, a FINOS Labs project, and Newton Protocol operators sign the decision on Ethereum Sepolia before it executes.";

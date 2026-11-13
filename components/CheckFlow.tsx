@@ -61,6 +61,12 @@ const TALL: Layout = {
   p3: "M192 260 C192 300 242 300 242 340",
 };
 
+/** One pass of the diagram while a check runs. Slow enough to follow. */
+export const RUN_LOOP_MS = 7000;
+
+/** Where each step of the explainer starts, as a fraction of one loop. */
+export const STEP_STARTS = [0, 0.2, 0.4, 0.66];
+
 /** Fractions of one loop. */
 const T = {
   p1: [0.02, 0.2],
@@ -203,7 +209,7 @@ function Diagram({ L, address, dur, className }: { L: Layout; address: string; d
 
 /** Wide layout on tablets and up, a stacked one on phones (CSS picks). */
 export default function CheckFlow({ address, speed = "idle" }: { address: string; speed?: "idle" | "running" }) {
-  const dur = speed === "running" ? "3.2s" : "5.2s";
+  const dur = speed === "running" ? `${RUN_LOOP_MS / 1000}s` : "5.2s";
   return (
     <>
       <Diagram L={WIDE} address={address} dur={dur} className="oa-flow-wide" />

@@ -790,7 +790,7 @@ a {
   z-index: 1;
   /* Room for the nav and the section heading above it, so the whole card
      fits on screen after "Check a wallet" scrolls here. */
-  height: clamp(600px, calc(100dvh - 190px), 820px);
+  height: clamp(560px, calc(100dvh - 230px), 820px);
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   background: var(--surface);
@@ -1231,5 +1231,150 @@ body::after {
   }
   .oa-cobrand .oa-finos-word {
     height: 10px;
+  }
+}
+
+/* ── Running screen: explainer on the left, diagram on the right ── */
+.oa-run {
+  flex: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 72px);
+  padding: 40px clamp(20px, 4vw, 56px);
+}
+.oa-steps {
+  list-style: none;
+  margin: 28px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.oa-steps li {
+  display: flex;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  opacity: 0.45;
+  transition: opacity 0.4s ease, background-color 0.4s ease, border-color 0.4s ease;
+}
+.oa-steps li.is-on {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.oa-step-n {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.oa-step-t {
+  display: block;
+  font-size: 16px;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--ink);
+}
+.oa-step-b {
+  display: block;
+  margin-top: 2px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #a1a1a6;
+}
+@media (max-width: 900px) {
+  .oa-run {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding: 28px 16px;
+  }
+  .oa-run-flow {
+    max-width: 520px;
+    width: 100%;
+    margin-inline: auto;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .oa-steps li {
+    transition: none;
+  }
+}
+
+/* "FINOS OpenAML": the FINOS mark and wordmark, then the project name. */
+.oa-openaml {
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.oa-cobrand-lg {
+  gap: 20px;
+}
+.oa-cobrand-lg .oa-logo-newton {
+  height: 22px;
+}
+.oa-cobrand-lg .oa-cobrand-rule {
+  height: 26px;
+}
+.oa-cobrand-lg .oa-finos-row {
+  gap: 9px;
+}
+.oa-cobrand-lg .oa-finos-icon {
+  height: 26px;
+}
+.oa-cobrand-lg .oa-finos-word {
+  height: 14px;
+}
+.oa-cobrand-lg .oa-openaml {
+  font-size: 19px;
+}
+@media (max-width: 640px) {
+  .oa-openaml {
+    font-size: 14px;
+  }
+}
+
+/* Phone: one step at a time and a smaller diagram, so the running screen
+   fits without scrolling. */
+@media (max-width: 640px) {
+  .oa-run {
+    gap: 16px;
+    padding: 8px 0 16px;
+  }
+  .oa-steps {
+    margin-top: 16px;
+  }
+  .oa-steps li {
+    min-height: 98px;
+  }
+  .oa-steps li:not(.is-on) {
+    display: none;
+  }
+  .oa-run-flow {
+    max-width: 250px;
+  }
+}
+@media (max-width: 640px) {
+  .oa-steps li {
+    min-height: 92px;
+    padding: 10px 12px;
+  }
+  .oa-run-flow {
+    max-width: 216px;
   }
 }

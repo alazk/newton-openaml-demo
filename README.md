@@ -1,6 +1,6 @@
 # Newton OpenAML Demo
 
-Newton Protocol × FINOS. Enter a recipient. Newton Protocol operators check the
+Newton Protocol × FINOS OpenAML. Enter a recipient. Newton Protocol operators check the
 transfer against 364,486 addresses labeled by
 [OpenAML](https://github.com/finos-labs/dtcch-2025-OpenAML), a FINOS Labs
 project, and sign the decision on Ethereum Sepolia before it would execute.
