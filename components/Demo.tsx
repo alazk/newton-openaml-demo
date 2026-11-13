@@ -573,13 +573,38 @@ function Console(props: {
             <Pickers pick={pick} onPick={onPick} disabled={busy} />
           </div>
 
-          <div style={{ ...small(), color: C.muted, minHeight: 20 }}>
-            {pick && pick !== "clean"
-              ? `A real address OpenAML lists as ${TIER_INFO[pick].name}: ${TIER_INFO[pick].meaning}.`
-              : pick === "clean"
-                ? "A freshly generated address with no history."
-                : "The sender is a fresh random address, so only the recipient can cause a denial."}
-          </div>
+          {/* What is about to be checked, in one place. Facts only: it never guesses the verdict. */}
+          <dl className="oa-summary">
+            <div>
+              <dt>Sender</dt>
+              <dd>A fresh random address</dd>
+            </div>
+            <div>
+              <dt>Recipient</dt>
+              <dd>
+                {valid ? (
+                  <>
+                    <span style={{ fontFamily: MONO }}>{middle(to)}</span>
+                    {pick && (
+                      <span className="oa-summary-note">
+                        {pick === "clean" ? "freshly generated, no history" : `a real address OpenAML lists as ${TIER_INFO[pick].name}`}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span style={{ color: C.muted }}>Not set yet</span>
+                )}
+              </dd>
+            </div>
+            <div>
+              <dt>Your rule</dt>
+              <dd>{deny.length ? `Block ${joinTiers(deny)}` : <span style={{ color: C.error }}>No list chosen</span>}</dd>
+            </div>
+            <div>
+              <dt>Checked by</dt>
+              <dd>Newton Protocol operators, signed on Ethereum Sepolia</dd>
+            </div>
+          </dl>
 
           <button
             type="button"

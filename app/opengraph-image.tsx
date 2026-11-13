@@ -54,7 +54,12 @@ async function loadInter() {
   try {
     const weights = [400, 500] as const;
     const data = await Promise.all(weights.map((w) => readFile(FONT_FILE(w))));
-    return weights.map((weight, i) => ({ name: "Inter", data: data[i], weight, style: "normal" as const }));
+    const fonts: { name: string; data: Buffer; weight: 400 | 500; style: "normal" }[] = weights.map((weight, i) => ({ name: "Inter", data: data[i], weight, style: "normal" as const }));
+    // The headline's display face. If it cannot be read, the headline falls back to Inter.
+    try {
+      fonts.push({ name: "GT Sectra Fine", data: await readFile(join(process.cwd(), "app/gt-sectra-fine-regular.woff")), weight: 400, style: "normal" });
+    } catch {}
+    return fonts;
   } catch {
     return undefined;
   }
@@ -119,7 +124,7 @@ export default async function OpengraphImage() {
 
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", flexDirection: "column", width: 580 }}>
-            <div style={{ display: "flex", flexDirection: "column", fontSize: 68, lineHeight: 1.05, fontWeight: 500, color: INK, letterSpacing: -2 }}>
+            <div style={{ display: "flex", flexDirection: "column", fontSize: 74, lineHeight: 1.04, fontWeight: 400, color: INK, letterSpacing: -1.5, fontFamily: fonts ? "GT Sectra Fine, Inter" : undefined }}>
               <span>Check a wallet</span>
               <span>before you pay it.</span>
             </div>

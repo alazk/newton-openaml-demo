@@ -1464,10 +1464,8 @@ body::after {
   --accent-hover: #e9e6dc;
   --caution: #d6b376;
   --glow: #d6b376;
-  /* Display face. The brand's is GT Sectra Fine LCG; until its web files are
-     in the repo this is Inter. To switch: add the @font-face and put
-     "GT Sectra Fine" first here. */
-  --display: var(--sans);
+  /* Display face: GT Sectra Fine (app/layout.tsx). Headlines only. */
+  --display: var(--font-display), "Iowan Old Style", Georgia, serif;
 }
 body,
 .oa-page {
@@ -1511,4 +1509,84 @@ body,
 /* Logo clear space: at least half the symbol's height on every side. */
 .oa-nav .oa-cobrand {
   gap: 18px;
+}
+
+/* Headlines in the display face: regular weight, a little tighter, and
+   sized up slightly because a fine serif reads smaller than Inter. */
+.oa-h1,
+.oa-tagline,
+.oa-head,
+#check-title {
+  font-family: var(--display) !important;
+  font-weight: 400 !important;
+  letter-spacing: -0.015em !important;
+}
+.oa-h1 {
+  font-size: clamp(3.25rem, 1.5rem + 5.4vw, 5.75rem);
+  line-height: 1.02;
+  padding-bottom: 0.08em; /* room for descenders under the text gradient */
+}
+.oa-head {
+  font-size: clamp(2rem, 1.4rem + 1.6vw, 2.75rem) !important;
+  line-height: 1.1 !important;
+}
+#check-title {
+  font-size: 1.75rem !important;
+}
+
+/* ── Summary of the check about to run (right column of the form) ── */
+.oa-summary {
+  flex: 1;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid rgba(254, 253, 249, 0.08);
+  border-radius: 12px;
+  background: rgba(254, 253, 249, 0.025);
+  padding: 4px 16px;
+}
+.oa-summary > div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  padding: 11px 0;
+}
+.oa-summary > div + div {
+  border-top: 1px solid rgba(254, 253, 249, 0.07);
+}
+.oa-summary dt {
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.4;
+  color: #a1a1a6;
+}
+.oa-summary dd {
+  margin: 0;
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.oa-summary-note {
+  display: block;
+  font-size: 13px;
+  color: #a1a1a6;
+}
+@media (max-width: 640px) {
+  .oa-head {
+    font-size: 1.75rem !important;
+  }
+  .oa-summary > div {
+    grid-template-columns: 84px minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .oa-run-flow {
+    max-width: 206px;
+  }
 }

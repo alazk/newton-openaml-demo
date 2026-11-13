@@ -3,6 +3,9 @@ import localFont from "next/font/local";
 import "./globals.css";
 
 // Self-hosted (the same file Lazarus Scan ships), so the build never waits on Google Fonts.
+// The brand's display face (newt.foundation/brand). A Latin subset of GT Sectra
+// Fine Regular, for headlines only. Licensed to the Foundation by Grilli Type.
+const display = localFont({ src: "./gt-sectra-fine-regular.woff2", variable: "--font-display", display: "swap", weight: "400" });
 const sans = localFont({ src: "./inter-latin.woff2", variable: "--font-sans", display: "swap", weight: "400 500" });
 
 const TITLE = "Newton Protocol × FINOS OpenAML: wallet screening demo";
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={sans.variable}>
+    <html lang="en" className={`${sans.variable} ${display.variable}`}>
       <body>
         <a href="#main" className="skip-link">
           Skip to content
