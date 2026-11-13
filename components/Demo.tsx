@@ -371,20 +371,21 @@ function Home(props: {
               disabled={busy}
               className="pe-input oa-wallet"
               style={{
-                height: H.field,
+                height: 52,
                 width: "100%",
                 padding: `0 ${SP.x2}px`,
                 borderRadius: R.sm,
                 border: `${BORDER}px solid ${to && !valid ? C.error : C.control}`,
                 fontFamily: MONO,
                 ...T.mono,
+                fontSize: 15,
                 color: C.ink,
               }}
             />
-            <span style={{ ...small(), color: C.muted, marginTop: SP.half }}>Or try a real one from OpenAML</span>
+            <span className="oa-form-note" style={{ color: C.muted, marginTop: SP.half }}>Or try a real one from OpenAML</span>
             <Pickers pick={pick} onPick={onPick} disabled={busy} />
-            {/* Empty until there is something to say, so it takes no room. */}
-            <p id="form-hint" role={error ? "alert" : undefined} className="oa-form-note" style={{ color: hintBad ? C.error : C.muted }} hidden={!hint}>
+            {/* Always takes the same room, so picking a wallet never resizes the form. */}
+            <p id="form-hint" role={error ? "alert" : undefined} className="oa-form-note oa-form-hint" style={{ color: hintBad ? C.error : C.muted }}>
               {hint}
             </p>
           </div>
@@ -395,10 +396,11 @@ function Home(props: {
             disabled={!ready}
             className={`pe-reset ${ready || busy ? "pe-dark" : ""} ${busy ? "pe-sweep" : ""}`}
             style={{
-              height: H.action,
+              height: 52,
               width: "100%",
               borderRadius: R.pill,
               ...T.label,
+              fontSize: 16,
               fontFamily: SANS,
               display: "flex",
               alignItems: "center",
@@ -504,11 +506,11 @@ function TierSwitch({ tier, on, disabled, onToggle, hit, compact }: { tier: Tier
       className={`pe-reset oa-tier ${on ? "is-on" : ""} ${hit ? "is-hit" : ""} ${compact ? "is-compact" : ""}`}
     >
       <span style={{ minWidth: 0, textAlign: "left" }}>
-        <span style={{ fontFamily: SANS, ...T.label, color: C.ink }}>
+        <span style={{ fontFamily: SANS, ...T.label, ...(compact ? { fontSize: 16 } : null), color: C.ink }}>
           {TIER_INFO[tier].name}
           <span style={{ color: C.muted, fontWeight: 400 }}> · {fmt(TIER_COUNTS[tier])}</span>
         </span>
-        <span className="oa-tier-meaning" style={{ ...small(), color: C.muted }}>
+        <span className="oa-tier-meaning" style={{ ...small(), ...(compact ? { fontSize: 14 } : null), color: C.muted }}>
           {TIER_INFO[tier].meaning}
         </span>
       </span>
@@ -568,12 +570,13 @@ function Pickers({ pick, onPick, disabled }: { pick: Pick; onPick: (p: Exclude<P
             onClick={() => onPick(o.value)}
             className="pe-reset"
             style={{
-              height: H.chip,
+              height: 46,
               padding: `0 ${SP.x1_5}px`,
               borderRadius: R.md,
               background: checked ? C.raised : "transparent",
               boxShadow: checked ? "0 1px 0 rgba(255,255,255,0.06) inset, 0 2px 8px rgba(0,0,0,0.5)" : "none",
               ...T.label,
+              fontSize: 15,
               fontFamily: SANS,
               color: checked ? C.ink : C.muted,
               textAlign: "center",
