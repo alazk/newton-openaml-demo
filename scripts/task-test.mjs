@@ -71,3 +71,10 @@ const show = (name, r) => `  ${name.padEnd(7)} ${r.verdict === null ? "NO DECISI
 const outcome =
   block.verdict === false ? "BLOCKED" : block.verdict === null || review.verdict === null ? "NO DECISION" : review.verdict === false ? "HELD FOR REVIEW" : "ALLOWED";
 console.log(`${to}  ${outcome}\n${show("block", block)}\n${show("review", review)}`);
+
+// EXPECT=ALLOWED|BLOCKED|"HELD FOR REVIEW" makes a mismatch a failure, so a
+// deploy script never has to rely on someone reading this output.
+if (process.env.EXPECT && process.env.EXPECT !== outcome) {
+  console.log(`  MISMATCH: expected ${process.env.EXPECT}`);
+  process.exit(1);
+}

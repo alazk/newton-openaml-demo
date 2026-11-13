@@ -3,6 +3,7 @@
 # Take the OpenAML demo live, one step at a time, stopping at the first problem.
 #
 #   bash scripts/go-live.sh
+#   bash scripts/go-live.sh --new-policy   # after changing the policy files
 #
 # Run it from anywhere; it moves to the repo itself. It asks for the owner key
 # and the Newton API key without showing them, and never writes them to disk.
@@ -74,6 +75,9 @@ echo "    owner wallet: $EXPECTED_OWNER"
 
 # ── 2-3. Policy ────────────────────────────────────────────
 NEWTON_POLICY="$(node -p "try{require('./$POLICY_RECORD').address||''}catch{''}")"
+# --new-policy: deploy the policy again (after a change to the policy files)
+# and move both clients to it.
+if [ "${1:-}" = "--new-policy" ]; then NEWTON_POLICY=""; fi
 if [ -n "$NEWTON_POLICY" ]; then
   step "2-3/6  Policy already deployed at $NEWTON_POLICY, skipping"
 else
@@ -123,16 +127,17 @@ fi
 [ -f "$CLIENT_RECORD" ] || stop "$CLIENT_RECORD was not written."
 
 # ── 5. Real checks ─────────────────────────────────────────
-step "5/6  Five real checks (expect: Allowed, Blocked, Blocked, Blocked, Held for review)"
-for a in \
-  0x1111111111111111111111111111111111111111 \
-  0x7F367cC41522cE07553e823bf3be79A889DEbe1B \
-  0x1723eb6c8fb98d2678ed186c48db11bbd12a80eb \
-  0x47666fab8bd0ac7003bce3f5c3585383f09486e2 \
-  0x1265bc855fd628aff6fed3fe4857a1b3b3597cfe; do
-  node scripts/task-test.mjs "$a"
-done
-ask "Did all five land as expected?" || stop "a check did not match. Send Claude the output above."
+step "5/6  Five real checks"
+check() {
+  EXPECT="$2" node scripts/task-test.mjs "$1" \
+    || stop "that check did not come back as $2. Nothing was sent to Vercel. Send Claude the output above."
+}
+check 0x1111111111111111111111111111111111111111 "ALLOWED"
+check 0x7F367cC41522cE07553e823bf3be79A889DEbe1B "BLOCKED"
+check 0x1723eb6c8fb98d2678ed186c48db11bbd12a80eb "BLOCKED"
+check 0x47666fab8bd0ac7003bce3f5c3585383f09486e2 "BLOCKED"
+check 0x1265bc855fd628aff6fed3fe4857a1b3b3597cfe "HELD FOR REVIEW"
+echo "    all five came back as expected"
 
 # ── 6. Site ────────────────────────────────────────────────
 step "6/6  Vercel"
