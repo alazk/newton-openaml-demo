@@ -6,8 +6,8 @@
  * Every dot stands for the same number of OpenAML addresses (TOTAL / DOTS,
  * about 140), and the colours follow the real tier counts: Flagged dots are
  * dim gold, the blocking tiers (Sanctioned, Blocked, Fraud) glow brand red.
- * That makes the red dots rare, which is the true shape of the data: 1,339 of
- * 364,503 addresses. A red scan ring sweeps the globe; red dots flare as it
+ * That makes the red dots rare, which is the true shape of the data: 1,322 of
+ * 364,486 addresses. A red scan ring sweeps the globe; red dots flare as it
  * passes, standing for the screening.
  *
  * Canvas 2D with its own projection, no 3D library. Pauses off screen and in

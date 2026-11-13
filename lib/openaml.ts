@@ -10,7 +10,7 @@
 
 export const INDEX_REPO = "alazk/newton-openaml-demo";
 /** Must equal INDEX_COMMIT in policy/openaml/policy.js. Checked by scripts/check-consistency.mjs. */
-export const INDEX_COMMIT = "dbed7bd97c74062a2fe0a2458a26ee35693a2787";
+export const INDEX_COMMIT = "e44a6ddd9465d10ad481719acf05e4d75f18991b";
 export const OPENAML_COMMIT = "07b2c3e9ca9849eb29ab2ee2c679c3bc4945cc35";
 export const OPENAML_REPO_URL = "https://github.com/finos-labs/dtcch-2025-OpenAML";
 
@@ -30,11 +30,11 @@ export const TIER_INFO: Record<Tier, { name: string; meaning: string }> = {
 
 export const TIER_COUNTS: Record<Tier, number> = {
   sanctioned: 182,
-  blocked: 581,
+  blocked: 564,
   fraud: 576,
   flagged: 363_271,
 };
-export const TOTAL_ADDRESSES = 364_503;
+export const TOTAL_ADDRESSES = 364_486;
 
 /**
  * Real OpenAML addresses, each in exactly one tier and recorded on Ethereum,

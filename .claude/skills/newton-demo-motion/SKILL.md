@@ -224,7 +224,7 @@ After the intro, every visual acts out what it does, on a loop. A frame that loa
 | Hop path, exposure route | Pulses travel from the wallet toward the listed address, each hop lights as a pulse passes |
 | Coverage map, disc | The reach ring sweeps clockwise again, nodes light in turn |
 | Register or sheet (Pool Guard) | A highlight steps down the rows, the matching row lights, a pulse carries the verdict to the hook |
-| Counts ("364,503 addresses") | Count up to the exact real figure, landing on the design text |
+| Counts ("364,486 addresses") | Count up to the exact real figure, landing on the design text |
 | Data globe | Already alive: it turns, the scan ring sweeps, red dots flare. Record it on the JS clock (drive its `t` from `__tick`), never by screen recording |
 
 **General stories:**

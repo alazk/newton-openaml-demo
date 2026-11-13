@@ -14,7 +14,7 @@ A Newton verdict is allow or deny, so review is expressed as a second client.
 The page submits each check to both and reads the two signed verdicts.
 
 - `policy.js` (WASM oracle) fetches the index shard for each address from this
-  repo at commit `dbed7bd` (`INDEX_COMMIT`), from two of three hosts
+  repo at commit `e44a6dd` (`INDEX_COMMIT`), from two of three hosts
   (raw.githubusercontent.com, jsDelivr, rawcdn.githack.com). The two answers
   must match byte for byte. It reports each address's tiers and never decides.
 - `policy.rego` binds the screened addresses to `input.to` and `input.from`,

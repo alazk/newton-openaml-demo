@@ -5,8 +5,9 @@
 // decides which tiers deny; this file only reports.
 //
 // Where the data comes from: index/shards/<abc>.json in this repo, at ONE
-// fixed commit (INDEX_COMMIT). That index is a format-only copy of OpenAML's
-// Data/ folder at OpenAML commit 07b2c3e (see index/README.md). Pinning a
+// fixed commit (INDEX_COMMIT). That index is a copy of OpenAML's Data/ folder
+// at OpenAML commit 07b2c3e, reformatted, minus 17 unownable addresses such as
+// 0x0 (see index/README.md). Pinning a
 // commit means every operator reads the same bytes, and a later push to the
 // repo cannot change what a deployed policy answers.
 //
@@ -20,7 +21,7 @@
 import { fetch as httpFetch } from "newton:provider/http@0.2.0";
 
 const INDEX_REPO = "alazk/newton-openaml-demo";
-const INDEX_COMMIT = "dbed7bd97c74062a2fe0a2458a26ee35693a2787";
+const INDEX_COMMIT = "e44a6ddd9465d10ad481719acf05e4d75f18991b";
 const OPENAML_SOURCE = "finos-labs/dtcch-2025-OpenAML@07b2c3e9ca9849eb29ab2ee2c679c3bc4945cc35";
 
 // Fixed on purpose: whoever submits the task must not pick where data comes from.

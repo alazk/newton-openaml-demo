@@ -125,7 +125,7 @@ export default async function OpengraphImage() {
               <span>before you pay it.</span>
             </div>
             <div style={{ display: "flex", flexDirection: "column", fontSize: 26, lineHeight: 1.4, color: MUTED, marginTop: 26 }}>
-              <span>364,503 addresses labeled by OpenAML.</span>
+              <span>364,486 addresses labeled by OpenAML.</span>
               <span>Enforced by Newton Protocol.</span>
             </div>
           </div>
@@ -146,7 +146,7 @@ export default async function OpengraphImage() {
               <span style={{ fontSize: 21, fontWeight: 500, color: INK }}>OpenAML address lists</span>
               <span style={{ fontSize: 16, color: MUTED, marginTop: 4, marginBottom: 8 }}>FINOS, Apache 2.0</span>
               <Tier name="Sanctioned" count="182" />
-              <Tier name="Blocked" count="581" />
+              <Tier name="Blocked" count="564" />
               <Tier name="Fraud" count="576" hit />
               <Tier name="Flagged" count="363,271" review />
             </div>

@@ -1,13 +1,13 @@
 # Newton OpenAML Demo
 
 Enter a recipient. Newton Protocol operators check the transfer against
-364,503 addresses labeled by [OpenAML](https://github.com/finos-labs/dtcch-2025-OpenAML)
+364,486 addresses labeled by [OpenAML](https://github.com/finos-labs/dtcch-2025-OpenAML)
 and sign the decision on Ethereum Sepolia before it would execute.
 
 | OpenAML tier | Addresses | What happens |
 | --- | --- | --- |
 | Sanctioned | 182 | Blocked |
-| Blocked (frozen by Tether or Circle) | 581 | Blocked |
+| Blocked (frozen by Tether or Circle) | 564 | Blocked |
 | Fraud (exploits and hacks) | 576 | Blocked |
 | Flagged (reported scams and phishing) | 363,271 | Held for review |
 
@@ -20,7 +20,7 @@ community reports with no source attached.
 page ─▶ /api/check ─┬▶ newt_createTask ─▶ block client  ─▶ operators run policy/openaml ─▶ quorum signs
                     └▶ newt_createTask ─▶ review client ─▶ operators run policy/openaml ─▶ quorum signs
                                                                 │
-                                          index/shards at commit dbed7bd (GitHub, jsDelivr, githack)
+                                          index/shards at commit e44a6dd (GitHub, jsDelivr, githack)
 ```
 
 - **One policy, two clients.** `policy/openaml` reports which OpenAML tiers
@@ -29,8 +29,10 @@ page ─▶ /api/check ─┬▶ newt_createTask ─▶ block client  ─▶ ope
   verdict is allow or deny, so "held for review" is the review client denying
   while the block client allows.
 - **The data.** `index/` is OpenAML's three files split into 4,096 small
-  shards, so the oracle fetches a few KB per check. It is a format change only,
-  rebuildable byte for byte from OpenAML commit `07b2c3e` (`index/README.md`).
+  shards, so the oracle fetches a few KB per check. It changes their format and
+  drops 17 addresses no one can own (the zero address, precompiles and decoding
+  leftovers in their Blocked list); nothing is added or relabeled. It rebuilds
+  byte for byte from OpenAML commit `07b2c3e` (`index/README.md`).
   The oracle reads the shards at one pinned commit of this repo, from two hosts
   that must agree. Newton does no labeling or upkeep: when OpenAML publishes new
   data, rerun the build and move the pin.
@@ -70,11 +72,11 @@ Order matters: the oracle can only fetch the index once this repo is public on
 GitHub at the pinned commit.
 
 1. **Push** this repo to `github.com/alazk/newton-openaml-demo` (public) without
-   rewriting history, so commit `dbed7bd` exists there.
+   rewriting history, so commit `e44a6dd` exists there.
 2. **Check the index is served** from both hosts the oracle needs:
    ```bash
-   curl -sI https://raw.githubusercontent.com/alazk/newton-openaml-demo/dbed7bd97c74062a2fe0a2458a26ee35693a2787/index/shards/476.json | head -1
-   curl -sI https://cdn.jsdelivr.net/gh/alazk/newton-openaml-demo@dbed7bd97c74062a2fe0a2458a26ee35693a2787/index/shards/476.json | head -1
+   curl -sI https://raw.githubusercontent.com/alazk/newton-openaml-demo/e44a6ddd9465d10ad481719acf05e4d75f18991b/index/shards/476.json | head -1
+   curl -sI https://cdn.jsdelivr.net/gh/alazk/newton-openaml-demo@e44a6ddd9465d10ad481719acf05e4d75f18991b/index/shards/476.json | head -1
    ```
 3. **Build, simulate and deploy the policy** from `policy/` with `newton-cli`
    (commands in `policy/openaml/README.md`). Simulate the `fraud` fixture with

@@ -6,7 +6,7 @@ import "./globals.css";
 const sans = localFont({ src: "./inter-latin.woff2", variable: "--font-sans", display: "swap", weight: "400 500" });
 
 const DESCRIPTION =
-  "Check a wallet before you pay it. The transfer is screened against 364,503 addresses labeled by OpenAML, and Newton Protocol operators sign the decision on Ethereum Sepolia before it executes.";
+  "Check a wallet before you pay it. The transfer is screened against 364,486 addresses labeled by OpenAML, and Newton Protocol operators sign the decision on Ethereum Sepolia before it executes.";
 
 export const viewport: Viewport = { themeColor: "#000000", colorScheme: "dark" };
 
