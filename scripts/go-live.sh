@@ -6,7 +6,8 @@
 #   bash scripts/go-live.sh --new-policy   # after changing the policy files
 #
 # Run it from anywhere; it moves to the repo itself. It asks for the owner key
-# and the Newton API key without showing them, and never writes them to disk.
+# and the Newton API key once, without showing them, and keeps them in the
+# macOS Keychain. They are never written to the repo.
 # Safe to run again: finished steps are recorded in policy/out/ and skipped.
 #
 #   1. checks the repo is on GitHub and the policy can read its data
@@ -33,6 +34,12 @@ ask() {
 }
 need() { command -v "$1" >/dev/null 2>&1 || stop "$1 is not installed. $2"; }
 
+if [ "${1:-}" = "--forget-keys" ]; then
+  security delete-generic-password -a "$USER" -s newton-openaml-owner-key >/dev/null 2>&1 || true
+  security delete-generic-password -a "$USER" -s newton-openaml-api-key >/dev/null 2>&1 || true
+  echo "Keys removed from the Keychain."; exit 0
+fi
+
 need git ""
 need node "Install Node 20 or newer."
 need curl ""
@@ -57,9 +64,26 @@ done
 
 # ── Keys (hidden, kept in memory only) ─────────────────────
 step "Keys"
-echo "    Paste each key and press Enter. Nothing shows while you paste."
-read -r -s -p "    Owner private key (the wallet behind the API key): " PRIVATE_KEY; echo
-read -r -s -p "    Newton API key: " API_KEY; echo
+# Asked once, then kept in the macOS Keychain (encrypted, never in the repo).
+# Forget them with: bash scripts/go-live.sh --forget-keys
+KC_OWNER="newton-openaml-owner-key"
+KC_API="newton-openaml-api-key"
+have_keychain() { command -v security >/dev/null 2>&1; }
+kc_get() { have_keychain && security find-generic-password -a "$USER" -s "$1" -w 2>/dev/null || true; }
+kc_put() { have_keychain && security add-generic-password -U -a "$USER" -s "$1" -w "$2" >/dev/null 2>&1 || true; }
+PRIVATE_KEY="$(kc_get "$KC_OWNER")"
+API_KEY="$(kc_get "$KC_API")"
+if [ -n "$PRIVATE_KEY" ] && [ -n "$API_KEY" ]; then
+  echo "    using the keys saved in your Keychain"
+else
+  echo "    Paste each key and press Enter. Nothing shows while you paste."
+  read -r -s -p "    Owner private key (the wallet behind the API key): " PRIVATE_KEY; echo
+  read -r -s -p "    Newton API key: " API_KEY; echo
+  if [ -n "$PRIVATE_KEY" ] && [ -n "$API_KEY" ] && have_keychain; then
+    kc_put "$KC_OWNER" "$PRIVATE_KEY"; kc_put "$KC_API" "$API_KEY"
+    echo "    saved to your Keychain, so this is the last time it asks"
+  fi
+fi
 [ -n "$PRIVATE_KEY" ] && [ -n "$API_KEY" ] || stop "both keys are needed."
 case "$PRIVATE_KEY" in 0x*) ;; *) PRIVATE_KEY="0x$PRIVATE_KEY" ;; esac
 export PRIVATE_KEY API_KEY
