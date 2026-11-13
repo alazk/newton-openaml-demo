@@ -78,10 +78,11 @@ export default function Demo() {
     if (!stage) return;
     if (run.status === "done") stage.focus({ preventScroll: true });
     // On a phone the stage is part of the page: when it changes state, bring
-    // its top back below the floating nav instead of leaving it under it.
+    // the section back below the floating nav. Scroll to the section, not the
+    // stage, so its heading is not left showing through the glass nav.
     if ((run.status === "running" || run.status === "done") && stage.getBoundingClientRect().top < 80) {
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      stage.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+      document.getElementById("check")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
     }
   }, [run.status]);
 
