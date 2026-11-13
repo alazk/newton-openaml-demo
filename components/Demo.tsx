@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import CheckFlow, { RUN_LOOP_MS, STEP_STARTS } from "@/components/CheckFlow";
 import DataGlobe, { globeLegend } from "@/components/DataGlobe";
-import { C, H, R, SP, T, BORDER } from "@/lib/ds";
+import { C, H, MOTION, R, SP, T, BORDER } from "@/lib/ds";
 import { DEFAULT_BLOCK, OPENAML_COMMIT, OPENAML_REPO_URL, TIERS, SAMPLES, TIER_COUNTS, TIER_INFO, TOTAL_ADDRESSES, type Tier } from "@/lib/openaml";
 import type { CheckResponse } from "@/app/api/check/route";
 
@@ -32,9 +32,9 @@ type Done = Extract<CheckResponse, { ok: true }>;
 type Run = { status: "idle" } | { status: "running" } | { status: "done"; result: Done } | { status: "error"; message: string };
 
 /** How long the running screen stays after the first check of a visit. */
-const REPEAT_MS = 1400;
+const REPEAT_MS = 1600 * MOTION;
 /** The globe's sweep before the screen changes. */
-const KICK_MS = 520;
+const KICK_MS = 520 * MOTION;
 
 const isAddress = (a: string) => /^0x[0-9a-fA-F]{40}$/.test(a);
 const reducedMotion = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -250,20 +250,23 @@ function Home(props: {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  // Under the rule: what gets through. Under the recipient: what was picked, or what is wrong.
+  const passes =
+    deny.length === 0
+      ? "Choose at least one list to block."
+      : deny.length === TIERS.length
+        ? "A wallet on none of these lists is allowed."
+        : `Allowed: wallets on no list, or only on ${joinTiers(TIERS.filter((t) => !deny.includes(t)))}.`;
   const hint = error
     ? error
     : to && !valid
       ? "That is not a valid address."
-      : deny.length === 0
-        ? "Choose at least one list to block."
-        : pick === "clean"
-          ? "A freshly generated address with no history."
-          : pick
-            ? `A real address OpenAML lists as ${TIER_INFO[pick].name}: ${TIER_INFO[pick].meaning}.`
-            : deny.length === TIERS.length
-              ? "A wallet on none of these lists is allowed."
-              : `Allowed: wallets on no list, or only on ${joinTiers(TIERS.filter((t) => !deny.includes(t)))}.`;
-  const hintBad = Boolean(error) || (Boolean(to) && !valid) || deny.length === 0;
+      : pick === "clean"
+        ? "A freshly generated address with no history."
+        : pick
+          ? `A real address OpenAML lists as ${TIER_INFO[pick].name}: ${TIER_INFO[pick].meaning}.`
+          : "";
+  const hintBad = Boolean(error) || (Boolean(to) && !valid);
 
   return (
     <section className={`oa-home ${on ? "oa-on" : ""}`} aria-labelledby="hero-title">
@@ -280,9 +283,25 @@ function Home(props: {
         </p>
 
         <div className="oa-form oa-card" style={{ ["--d" as string]: "0.3s" }}>
+          {/* 1. The rule comes first: decide what to stop before choosing who to pay. */}
           <div className="oa-form-row">
-            <label htmlFor="recipient" style={{ ...label(), color: C.muted }}>
-              Recipient wallet
+            <span id="rule-title" className="oa-form-step">
+              <b aria-hidden>1</b>Block the transfer if either wallet is on
+            </span>
+            <div className="oa-tiers" role="group" aria-labelledby="rule-title">
+              {TIERS.map((t) => (
+                <TierSwitch key={t} tier={t} on={deny.includes(t)} disabled={busy} onToggle={() => onToggle(t)} compact />
+              ))}
+            </div>
+            <p className="oa-form-note" style={{ color: deny.length ? C.muted : C.error }}>
+              {passes}
+            </p>
+          </div>
+
+          {/* 2. Then the recipient. */}
+          <div className="oa-form-row">
+            <label htmlFor="recipient" className="oa-form-step">
+              <b aria-hidden>2</b>Recipient wallet
             </label>
             <input
               id="recipient"
@@ -309,25 +328,13 @@ function Home(props: {
                 color: C.ink,
               }}
             />
-          </div>
-
-          <div className="oa-form-row">
-            <span style={{ ...small(), color: C.muted }}>Or try a real one from OpenAML</span>
+            <span style={{ ...small(), color: C.muted, marginTop: SP.half }}>Or try a real one from OpenAML</span>
             <Pickers pick={pick} onPick={onPick} disabled={busy} />
+            {/* Empty until there is something to say, so it takes no room. */}
+            <p id="form-hint" role={error ? "alert" : undefined} className="oa-form-note" style={{ color: hintBad ? C.error : C.muted }} hidden={!hint}>
+              {hint}
+            </p>
           </div>
-
-          <div className="oa-form-row">
-            <span style={{ ...small(), color: C.muted }}>Block the transfer if either wallet is on</span>
-            <div className="oa-rule" role="group" aria-label="Lists that block a transfer">
-              {TIERS.map((t) => (
-                <RulePill key={t} tier={t} on={deny.includes(t)} disabled={busy} onToggle={() => onToggle(t)} />
-              ))}
-            </div>
-          </div>
-
-          <p id="form-hint" role={error ? "alert" : undefined} className="oa-form-hint" style={{ color: hintBad ? C.error : C.muted }}>
-            {hint}
-          </p>
 
           <button
             type="button"
@@ -361,25 +368,6 @@ function Home(props: {
         </figcaption>
       </figure>
     </section>
-  );
-}
-
-/** A list in the form's rule: on means block, off means allow. */
-function RulePill({ tier, on, disabled, onToggle }: { tier: Tier; on: boolean; disabled: boolean; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={on}
-      aria-label={`${TIER_INFO[tier].name}: ${on ? "blocked" : "allowed"}`}
-      title={`${TIER_INFO[tier].name}: ${TIER_INFO[tier].meaning} (${fmt(TIER_COUNTS[tier])} addresses)`}
-      disabled={disabled}
-      onClick={onToggle}
-      className={`pe-reset oa-rule-pill ${on ? "is-on" : ""}`}
-    >
-      <i aria-hidden />
-      {TIER_INFO[tier].name}
-    </button>
   );
 }
 
@@ -477,23 +465,29 @@ function Footer() {
 
 /* ── Rule switches (verdict screen) and sample picks ────── */
 
-function TierSwitch({ tier, on, disabled, onToggle, hit }: { tier: Tier; on: boolean; disabled: boolean; onToggle: () => void; hit?: boolean }) {
+/**
+ * One list in the rule: on means block, off means allow. Compact puts the
+ * meaning on the same line as the name, for the form, where height is short.
+ */
+function TierSwitch({ tier, on, disabled, onToggle, hit, compact }: { tier: Tier; on: boolean; disabled: boolean; onToggle: () => void; hit?: boolean; compact?: boolean }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={on}
-      aria-label={`${TIER_INFO[tier].name}: ${on ? "blocked" : "allowed"}`}
+      aria-label={`${TIER_INFO[tier].name}, ${TIER_INFO[tier].meaning}: ${on ? "blocked" : "allowed"}`}
       disabled={disabled}
       onClick={onToggle}
-      className={`pe-reset oa-tier ${on ? "is-on" : ""} ${hit ? "is-hit" : ""}`}
+      className={`pe-reset oa-tier ${on ? "is-on" : ""} ${hit ? "is-hit" : ""} ${compact ? "is-compact" : ""}`}
     >
       <span style={{ minWidth: 0, textAlign: "left" }}>
         <span style={{ fontFamily: SANS, ...T.label, color: C.ink }}>
           {TIER_INFO[tier].name}
           <span style={{ color: C.muted, fontWeight: 400 }}> · {fmt(TIER_COUNTS[tier])}</span>
         </span>
-        <span style={{ display: "block", ...small(), color: C.muted }}>{TIER_INFO[tier].meaning}</span>
+        <span className="oa-tier-meaning" style={{ ...small(), color: C.muted }}>
+          {TIER_INFO[tier].meaning}
+        </span>
       </span>
       <span className="oa-tier-state" aria-hidden>
         {on ? "Block" : "Allow"}

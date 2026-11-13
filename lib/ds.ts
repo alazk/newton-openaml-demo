@@ -6,6 +6,13 @@
  * ruby, and gold. Interaction is ink.
  */
 
+/**
+ * Pace of every entrance, landing and timed screen in the demo. Durations in
+ * the code are written at 1 and multiplied by this. Keep in step with
+ * --oa-slow in app/globals.css.
+ */
+export const MOTION = 1.5;
+
 /* ── Spacing. 4px baseline, section gap tops out at 48. ── */
 export const SP = {
   half: 4,

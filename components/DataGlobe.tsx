@@ -16,6 +16,7 @@
 
 import { useEffect, useRef } from "react";
 import { SEVERE_TIERS, TIER_COUNTS, TIER_INFO, TOTAL_ADDRESSES, type Tier } from "@/lib/openaml";
+import { MOTION } from "@/lib/ds";
 
 const DOTS = 2600;
 const PER_DOT = TOTAL_ADDRESSES / DOTS;
@@ -99,8 +100,8 @@ export default function DataGlobe({ deny = [], focus = null, kick = 0 }: { deny?
       cx = 0,
       cy = 0;
     // One sweep of the ring and one flaring dot, started by a new kick.
-    const SWEEP = 1.1;
-    const FLARE = 1.9;
+    const SWEEP = 1.1 * MOTION;
+    const FLARE = 1.9 * MOTION;
     let seenKick = live.current.kick;
     let kickAt = -10;
     let flare: Pt | null = null;

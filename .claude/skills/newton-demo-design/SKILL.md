@@ -121,6 +121,8 @@ Two brand faces (newt.foundation/brand): **GT Sectra Fine LCG** for display and 
 
 **Console:** two columns from 1024px, one below. Left: the rule card. When the visitor can choose the rule, it is one switch per option (name, real count, one line on what it means, "Block" or "Allow"; a switch set to Block is the only red on the screen), a plain line saying what gets through, and the data source with commit. Each choice must map to a client whose on-chain params hold that rule; the choice is never passed to the policy as an argument. Right: the transfer (labelled field, sample picks as a segmented control, a summary of the check about to run as a short definition list: sender, recipient, the rule, who checks it; then the primary action). The right column is never left with a large empty gap. One check gives one signed verdict and one attestation link. Headings on both columns share one fixed-height row so they line up.
 
+**The rule comes first.** Whatever the layout, the visitor decides what to block before choosing who to pay: step 1 is the rule, step 2 the recipient, then the action. When the form sits in the hero (one screen, no console), number the two steps and use the same switches as the verdict screen's rule, with the meaning on the same line as the name so all four fit; on phones the meaning goes back under the name. The primary action must stay above the fold at 1280×800, 1536×864 and 1440×900. A hint line under the recipient is empty, and takes no room, until there is something to say.
+
 **Verdict panel (max 36–40rem, centred):**
 
 ```
@@ -132,7 +134,7 @@ reason (lead, 44ch)
 party (full address, Copy) · Decided (timestamp)
 ```
 
-Nothing sits above the headline. Detail never rearranges the verdict. The address is shown whole, never truncated, because people screenshot this panel as the record.
+Nothing sits above the headline except the "Signed verdict" eyebrow. The verdict word is `clamp(2.75rem, 1.9rem + 2.2vw, 3.75rem)` (44 to 60px): read first, but never so large that the reason beside it stops carrying the screen. Detail never rearranges the verdict. The address is shown whole, never truncated, because people screenshot this panel as the record.
 
 **Breakpoints:** 640 / 768 / 1024 (Tailwind). Below 1024 the hero and console stack. Below 640 the stage becomes part of the page, the nav drops its button, the diagram switches to its stacked layout, segments wrap into rows, parties stack, buttons go full width.
 
@@ -158,6 +160,8 @@ Every interactive element ships with all of these:
 - **Stale input:** if the visitor edits the field after a verdict, dim the verdict and say "Recipient changed · run again".
 
 ## 8. Motion
+
+**Pace: take your time.** Every entrance, landing, screen change and timed hold runs at 1.5× the durations and staggers listed here, set by one knob in each place: `--oa-slow: 1.5` in CSS (write durations as `calc(0.9s * var(--oa-slow))`, delays as `calc(var(--d) * var(--oa-slow))`) and `MOTION = 1.5` in `lib/ds.ts` for timers, the globe sweep and the check diagram's loop. Keep the two equal. Interaction feedback (hover, focus, a switch flipping) stays at 300ms or less, because that answers a click rather than telling a story.
 
 Curve `--ease-newton: cubic-bezier(0.22, 1, 0.36, 1)` for transforms, `cubic-bezier(0.33, 1, 0.68, 1)` for opacity and blur. Interaction 300ms. Never a browser default curve. Everything enters by rising from below and resolving from blur to sharp, staggered in reading order (the `newton-demo-motion` choreography, live on the page).
 

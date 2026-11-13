@@ -17,6 +17,7 @@
  */
 
 import { useEffect, useId, useRef } from "react";
+import { MOTION } from "@/lib/ds";
 
 // Dark theme: boxes are near-black glass, a lit box outlines in white, the
 // pulses are white with a glow.
@@ -62,7 +63,7 @@ const TALL: Layout = {
 };
 
 /** One pass of the diagram while a check runs. Slow enough to follow. */
-export const RUN_LOOP_MS = 7000;
+export const RUN_LOOP_MS = 7000 * MOTION;
 
 /** Where each step of the explainer starts, as a fraction of one loop. */
 export const STEP_STARTS = [0, 0.2, 0.4, 0.66];
@@ -209,7 +210,7 @@ function Diagram({ L, address, dur, className }: { L: Layout; address: string; d
 
 /** Wide layout on tablets and up, a stacked one on phones (CSS picks). */
 export default function CheckFlow({ address, speed = "idle" }: { address: string; speed?: "idle" | "running" }) {
-  const dur = speed === "running" ? `${RUN_LOOP_MS / 1000}s` : "5.2s";
+  const dur = speed === "running" ? `${RUN_LOOP_MS / 1000}s` : `${5.2 * MOTION}s`;
   return (
     <>
       <Diagram L={WIDE} address={address} dur={dur} className="oa-flow-wide" />
