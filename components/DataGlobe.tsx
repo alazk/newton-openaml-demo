@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useRef } from "react";
-import { BLOCK_TIERS, TIER_COUNTS, TIER_INFO, TOTAL_ADDRESSES, type Tier } from "@/lib/openaml";
+import { SEVERE_TIERS, TIER_COUNTS, TIER_INFO, TOTAL_ADDRESSES, type Tier } from "@/lib/openaml";
 
 const DOTS = 2600;
 const PER_DOT = TOTAL_ADDRESSES / DOTS;
@@ -37,7 +37,7 @@ function mulberry32(seed: number) {
 }
 
 /** Red dot count per blocking tier, from the real counts, at least one each. */
-export const RED_DOTS = BLOCK_TIERS.reduce((n, t) => n + Math.max(1, Math.round(TIER_COUNTS[t] / PER_DOT)), 0);
+export const RED_DOTS = SEVERE_TIERS.reduce((n, t) => n + Math.max(1, Math.round(TIER_COUNTS[t] / PER_DOT)), 0);
 
 function buildPoints(): Pt[] {
   const rand = mulberry32(364503);
@@ -261,7 +261,7 @@ export default function DataGlobe() {
       <canvas ref={canvas} />
       <div className="oa-globe-chips">
         {chips.map((c) => {
-          const red = BLOCK_TIERS.includes(c.tier);
+          const red = SEVERE_TIERS.includes(c.tier);
           return (
             <span
               key={c.tier}
@@ -283,6 +283,6 @@ export default function DataGlobe() {
 
 /** The legend under the globe, from the same numbers it draws. */
 export function globeLegend(): string {
-  const blocking = BLOCK_TIERS.reduce((n, t) => n + TIER_COUNTS[t], 0);
+  const blocking = SEVERE_TIERS.reduce((n, t) => n + TIER_COUNTS[t], 0);
   return `OpenAML's lists as ${DOTS.toLocaleString("en-US")} dots, about ${Math.round(PER_DOT)} addresses each. Red: Sanctioned, Blocked and Fraud, ${blocking.toLocaleString("en-US")} addresses. Gold: Flagged, ${TIER_COUNTS.flagged.toLocaleString("en-US")}.`;
 }

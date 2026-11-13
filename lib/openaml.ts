@@ -17,9 +17,18 @@ export const OPENAML_REPO_URL = "https://github.com/finos-labs/dtcch-2025-OpenAM
 export type Tier = "sanctioned" | "blocked" | "fraud" | "flagged";
 export const TIERS: Tier[] = ["sanctioned", "blocked", "fraud", "flagged"];
 
-/** Which client each tier belongs to. Mirrors the params in scripts/deploy-clients.mjs. */
-export const BLOCK_TIERS: Tier[] = ["sanctioned", "blocked", "fraud"];
-export const REVIEW_TIERS: Tier[] = ["flagged"];
+/** Blocked by default on the page. The visitor can change the set. */
+export const DEFAULT_BLOCK: Tier[] = ["sanctioned", "blocked", "fraud"];
+
+/** Drawn red on the globe; Flagged is gold. A picture of the data, not a rule. */
+export const SEVERE_TIERS: Tier[] = ["sanctioned", "blocked", "fraud"];
+
+/**
+ * Name of a set of tiers, in TIERS order: "sanctioned+blocked+fraud".
+ * One client is deployed per set (scripts/deploy-clients.mjs) and recorded
+ * under this key in policy/out/clients.sepolia.json.
+ */
+export const comboKey = (tiers: readonly string[]): string => TIERS.filter((t) => tiers.includes(t)).join("+");
 
 export const TIER_INFO: Record<Tier, { name: string; meaning: string }> = {
   sanctioned: { name: "Sanctioned", meaning: "on a government sanctions list" },

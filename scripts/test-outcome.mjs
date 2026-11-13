@@ -1,5 +1,5 @@
 /**
- * Tests for lib/outcome.ts: which outcome two signed verdicts produce, and
+ * Tests for lib/outcome.ts: which outcome the signed verdict produces, and
  * when a denial is shown grey ("Screening unavailable") instead of red.
  *
  *   node --experimental-strip-types scripts/test-outcome.mjs
@@ -29,22 +29,17 @@ eq("signed reasons win over the lookup", failedClosed(false, ["screening_unavail
 eq("no reasons, lookup finds a blocking tier: a match", failedClosed(false, null, BLOCK, pair(["fraud"])), false);
 eq("no reasons, lookup finds the sender: a match", failedClosed(false, null, BLOCK, pair([], ["sanctioned"])), false);
 eq("no reasons, lookup finds nothing: failed closed", failedClosed(false, null, BLOCK, pair([])), true);
-eq("no reasons, only Flagged under block: failed closed", failedClosed(false, null, BLOCK, pair(["flagged"])), true);
-eq("review client, Flagged recipient: a match", failedClosed(false, null, REVIEW, pair(["flagged"])), false);
-eq("review client, Fraud only: failed closed", failedClosed(false, null, REVIEW, pair(["fraud"])), true);
+eq("no reasons, only Flagged, not in the chosen set: failed closed", failedClosed(false, null, BLOCK, pair(["flagged"])), true);
+eq("Flagged chosen, Flagged recipient: a match", failedClosed(false, null, REVIEW, pair(["flagged"])), false);
+eq("Flagged chosen, Fraud only: failed closed", failedClosed(false, null, REVIEW, pair(["fraud"])), true);
 eq("no reasons, no lookup: cannot tell, stays red", failedClosed(false, null, BLOCK, null), false);
 eq("empty reasons list counts as none", failedClosed(false, [], BLOCK, null), false);
 
 // decide
-eq("both allow", decide(side(true), side(true)), "allowed");
-eq("block denies on a match", decide(side(false), side(true)), "blocked");
-eq("block denies on a match, review unreadable", decide(side(false), side(null)), "blocked");
-eq("block fails closed", decide(side(false, true), side(true)), "unavailable");
-eq("block fails closed, review denies on a match", decide(side(false, true), side(false)), "unavailable");
-eq("review denies on a match", decide(side(true), side(false)), "review");
-eq("review fails closed", decide(side(true), side(false, true)), "unavailable");
-eq("block unreadable", decide(side(null), side(true)), "none");
-eq("review unreadable, block allows", decide(side(true), side(null)), "none");
+eq("allowed", decide(side(true)), "allowed");
+eq("denied on a match", decide(side(false)), "blocked");
+eq("denied failing closed", decide(side(false, true)), "unavailable");
+eq("unreadable", decide(side(null)), "none");
 
 // extractDenies
 eq("finds deny nested anywhere", extractDenies({ task_response: { evaluation_result: { deny: ["payee_fraud"] } } }), ["payee_fraud"]);

@@ -83,7 +83,7 @@ function Tier({ name, count, hit, review }: { name: string; count: string; hit?:
       {hit ? (
         <span style={{ fontSize: 18, fontWeight: 500, color: RED }}>Match</span>
       ) : (
-        <span style={{ fontSize: 16, color: review ? GOLD : MUTED }}>{review ? "Review" : "Block"}</span>
+        <span style={{ fontSize: 16, color: MUTED }}>{review ? "Allow" : "Block"}</span>
       )}
     </div>
   );
@@ -125,7 +125,7 @@ export default async function OpengraphImage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", fontSize: 26, lineHeight: 1.4, color: MUTED, marginTop: 26 }}>
               <span>364,486 addresses labeled by OpenAML.</span>
-              <span>Enforced by Newton Protocol.</span>
+              <span>You choose which lists block.</span>
             </div>
           </div>
 

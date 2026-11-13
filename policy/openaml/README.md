@@ -3,15 +3,16 @@
 ## Overview
 
 Denies a transfer when the payee or payer is in an OpenAML tier listed in the
-params. One policy, two clients:
+params. One policy, one client per set of tiers:
 
-| Client | Params | A deny means |
-| --- | --- | --- |
-| Block | `{"deny_tiers": ["sanctioned", "blocked", "fraud"]}` | Blocked |
-| Review | `{"deny_tiers": ["flagged"]}` | Held for a person to review |
+| Client params | A deny means |
+| --- | --- |
+| `{"deny_tiers": ["sanctioned", "blocked", "fraud"]}` (the page's default) | Blocked |
+| any other non-empty mix of the four tiers | Blocked |
 
-A Newton verdict is allow or deny, so review is expressed as a second client.
-The page submits each check to both and reads the two signed verdicts.
+The page lets a visitor choose the tiers. Each of the 15 possible sets has its
+own client (`scripts/deploy-clients.mjs`), so every check is one task and one
+signed verdict.
 
 - `policy.js` (WASM oracle) fetches the index shard for each address from this
   repo at commit `e44a6dd` (`INDEX_COMMIT`), from two of three hosts

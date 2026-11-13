@@ -1,7 +1,6 @@
 {
-  "block": {
+  "sanctioned+blocked+fraud": {
     "address": "0x33494B509f7D29dC7D35D774DCae8F01B527266d",
-    "env": "POLICY_CLIENT_BLOCK",
     "params": {
       "deny_tiers": [
         "sanctioned",
@@ -15,9 +14,8 @@
     "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
     "deployedAt": "2026-11-13T12:04:14.299Z"
   },
-  "review": {
+  "flagged": {
     "address": "0x445271510cfcf46e7F543B12024Ca65879fA8C0a",
-    "env": "POLICY_CLIENT_REVIEW",
     "params": {
       "deny_tiers": [
         "flagged"

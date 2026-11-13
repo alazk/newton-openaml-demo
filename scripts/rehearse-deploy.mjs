@@ -76,27 +76,27 @@ console.log("── dry run ──\n" + dry.out);
 const exec = await run(["--execute"]);
 console.log("── execute ──\n" + exec.out);
 const again = await run(["--execute"]);
-console.log("── re-run (idempotent) ──\n" + again.out.split("\n").filter((l) => /plan|block|review|already|Both/.test(l)).join("\n"));
-const wrongOwner = await run(["--execute", "--only=block"], { EXPECTED_OWNER: "0x000000000000000000000000000000000000dEaD", DEPLOYMENTS_FILE: OUT + "/empty.json" });
+console.log("── re-run (idempotent) ──\n" + again.out.split("\n").filter((l) => /plan|already|All clients/.test(l)).join("\n"));
+const wrongOwner = await run(["--execute", "--only=flagged"], { EXPECTED_OWNER: "0x000000000000000000000000000000000000dEaD", DEPLOYMENTS_FILE: OUT + "/empty.json" });
 console.log("── owner guard ──\n" + wrongOwner.out.split("\n").slice(-2).join("\n") + `exit ${wrongOwner.code}`);
 
 // Independent read-back, and the SDK's own policyId derivation.
 const rec = JSON.parse(readFileSync(record, "utf8"));
 let ok = exec.code === 0 && again.code === 0 && wrongOwner.code !== 0;
-for (const key of ["block", "review"]) {
+for (const key of Object.keys(rec)) {
   const addr = rec[key].address;
   const [policyId, revision, policies] = await pc.readContract({ address: addr, abi: client.abi, functionName: "getPolicySetSnapshot" });
   const sdkId = sdkPolicy.policyReadFunctions.precomputePolicyId({ chainId: 11155111, client: addr, revision, policies });
   const params = Buffer.from(policies[0].config.policyParams.slice(2), "hex").toString();
   const owner = await pc.readContract({ address: addr, abi: client.abi, functionName: "getOwner" });
   const tm = await pc.readContract({ address: addr, abi: client.abi, functionName: "getNewtonPolicyTaskManager" });
-  const good = policyId === sdkId && owner === account.address && tm.toLowerCase() === "0xecb741f4875770f9a5f060cb30f6c9eb5966ed13";
+  const good = JSON.parse(params).deny_tiers.join("+") === key && policyId === sdkId && owner === account.address && tm.toLowerCase() === "0xecb741f4875770f9a5f060cb30f6c9eb5966ed13";
   ok &&= good;
-  console.log(`${key.padEnd(6)} ${addr} policyId ${policyId === sdkId ? "= SDK" : "≠ SDK"}  params ${params}  owner ok ${owner === account.address}  taskManager ok ${tm.toLowerCase() === "0xecb741f4875770f9a5f060cb30f6c9eb5966ed13"}`);
+  console.log(`${key.padEnd(32)} ${addr} policyId ${policyId === sdkId ? "= SDK" : "≠ SDK"}  params ${params}  owner ok ${owner === account.address}  taskManager ok ${tm.toLowerCase() === "0xecb741f4875770f9a5f060cb30f6c9eb5966ed13"}`);
 }
 const calls = await pc.readContract({ address: policy, abi: stubs.StubPolicy.abi, functionName: "calls" });
-console.log(`setPolicy registered on the policy ${calls} times (expect 2)`);
-ok &&= calls === 2n;
+console.log(`setPolicy registered on the policy ${calls} times (expect 15)`);
+ok &&= calls === 15n && Object.keys(rec).length === 15;
 console.log(ok ? "\nREHEARSAL PASSED" : "\nREHEARSAL FAILED");
 await server.close();
 process.exit(ok ? 0 : 1);

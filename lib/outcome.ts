@@ -1,5 +1,5 @@
 /**
- * From two signed verdicts to one outcome, and when a denial was the policy
+ * From the signed verdict to the outcome, and when a denial was the policy
  * failing closed rather than a match.
  *
  * Kept free of runtime imports so scripts/test-outcome.mjs can run it with
@@ -23,7 +23,7 @@ export type Side = {
   failClosed: boolean;
 };
 
-export type Outcome = "allowed" | "review" | "blocked" | "unavailable" | "none";
+export type Outcome = "allowed" | "blocked" | "unavailable" | "none";
 
 const TIER_REASON = /^(payee|payer)_(sanctioned|blocked|fraud|flagged)$/;
 
@@ -50,18 +50,15 @@ export function failedClosed(
 }
 
 /**
- * The outcome, from the signed verdicts only (failClosed already applied):
- *   block denied by a match                        → blocked
- *   block denied failing closed                    → unavailable
- *   either unreadable                              → none
- *   review denied by a match                       → review
- *   review denied failing closed                   → unavailable
- *   both allowed                                   → allowed
+ * The outcome, from the signed verdict only (failClosed already applied):
+ *   denied by a match        → blocked
+ *   denied failing closed    → unavailable
+ *   unreadable               → none
+ *   allowed                  → allowed
  */
-export function decide(block: Side, review: Side): Outcome {
-  if (block.allowed === false) return block.failClosed ? "unavailable" : "blocked";
-  if (block.allowed === null || review.allowed === null) return "none";
-  if (review.allowed === false) return review.failClosed ? "unavailable" : "review";
+export function decide(verdict: Side): Outcome {
+  if (verdict.allowed === false) return verdict.failClosed ? "unavailable" : "blocked";
+  if (verdict.allowed === null) return "none";
   return "allowed";
 }
 

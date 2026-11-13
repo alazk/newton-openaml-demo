@@ -2,29 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { wasmArgsFor } from "@/lib/policy-set";
 import { extractAllow, extractTaskId } from "@/lib/verdict";
-import { BLOCK_TIERS, REVIEW_TIERS, lookup, type Listing } from "@/lib/openaml";
+import { TIERS, lookup, type Listing, type Tier } from "@/lib/openaml";
+import { clientFor } from "@/lib/clients";
 import { decide, extractDenies, failedClosed, type Outcome, type Side } from "@/lib/outcome";
 
 /**
- * One check: the same transfer submitted as a real, quorum-signed Newton task
- * to both clients, in parallel.
+ * One check: the transfer submitted as one real, quorum-signed Newton task.
  *
- *   block client   denies Sanctioned, Blocked and Fraud
- *   review client  denies Flagged
+ * The visitor chooses which OpenAML tiers block a transfer. Each possible set
+ * has its own client contract with that set in its on-chain params, so the
+ * server only picks the matching client (lib/clients.ts). The choice never
+ * travels to the policy as an argument a submitter could change.
  *
- * Outcome, from the two signed verdicts (lib/outcome.ts):
- *   block denies on a match              → blocked
- *   block allows, review denies on a match → review
- *   either denies because it could not screen → unavailable
- *   both allow                           → allowed
- *   either unreadable (and no block deny) → none
+ * Outcome, from the one signed verdict (lib/outcome.ts):
+ *   denied on a match                  → blocked
+ *   denied because it could not screen → unavailable
+ *   allowed                            → allowed
+ *   unreadable                         → none
  *
  * After that, an unsigned lookup in the OpenAML index says which tier the
  * addresses are in, so the page can explain the verdict. It never changes it.
  *
- * Same hardening as the sanctions demo's /api/evaluate: two fixed clients
- * from env and nothing from the request, validated input, a small body, and
- * fixed error text with details only in the server log.
+ * Same hardening as the sanctions demo's /api/evaluate: clients from the
+ * committed deploy record and nothing else from the request, validated input,
+ * a small body, and fixed error text with details only in the server log.
  */
 
 export const runtime = "nodejs";
@@ -43,8 +44,9 @@ export type CheckResponse =
       outcome: Outcome;
       to: string;
       from: string;
-      block: Side;
-      review: Side;
+      /** The tiers the visitor chose to block. */
+      deny: Tier[];
+      verdict: Side;
       lookup: { to: Listing; from: Listing } | null;
       decidedAt: string;
     }
@@ -113,16 +115,14 @@ export async function POST(req: NextRequest) {
   }
 
   const apiKey = process.env.NEWTON_API_KEY;
-  const blockClient = process.env.POLICY_CLIENT_BLOCK;
-  const reviewClient = process.env.POLICY_CLIENT_REVIEW;
-  if (!apiKey || !isAddress(blockClient) || !isAddress(reviewClient)) {
-    console.error("[check] misconfigured:", { hasKey: Boolean(apiKey), block: blockClient ?? null, review: reviewClient ?? null });
+  if (!apiKey) {
+    console.error("[check] misconfigured: NEWTON_API_KEY is not set");
     return fail("Screening is not configured on this deployment.", 500);
   }
 
   const raw = await req.text();
   if (raw.length > MAX_BODY_BYTES) return fail("Request too large.", 413);
-  let body: { to?: unknown; from?: unknown };
+  let body: { to?: unknown; from?: unknown; deny?: unknown };
   try {
     body = JSON.parse(raw);
   } catch {
@@ -131,28 +131,33 @@ export async function POST(req: NextRequest) {
   if (!isAddress(body.to)) return fail("Recipient must be a 20-byte 0x address.", 400);
   if (body.from !== undefined && !isAddress(body.from)) return fail("Sender must be a 20-byte 0x address.", 400);
 
+  // Which tiers block: one to four known tier names, nothing else.
+  if (!Array.isArray(body.deny) || body.deny.length === 0 || body.deny.length > TIERS.length || !body.deny.every((t) => TIERS.includes(t as Tier))) {
+    return fail("Choose at least one list to block.", 400);
+  }
+  const deny = TIERS.filter((t) => (body.deny as unknown[]).includes(t));
+  const client = clientFor(deny);
+  if (!client) {
+    console.error("[check] no client deployed for", deny.join("+"));
+    return fail("This combination of lists is not set up on this deployment yet.", 500);
+  }
+
   const to = body.to;
   // A fresh random sender unless one is given, so only the recipient can cause a denial.
   const from = (body.from as string | undefined) ?? "0x" + Buffer.from(crypto.getRandomValues(new Uint8Array(20))).toString("hex");
 
-  const [b, r, listing] = await Promise.all([
-    submit(apiKey, blockClient, to, from),
-    submit(apiKey, reviewClient, to, from),
-    lookup([to, from]).catch(() => null),
-  ]);
+  const [v, listing] = await Promise.all([submit(apiKey, client, to, from), lookup([to, from]).catch(() => null)]);
 
   const pair = listing ? { to: listing[0], from: listing[1] } : null;
-  const block: Side = { ...b, failClosed: failedClosed(b.allowed, b.denies, BLOCK_TIERS, pair) };
-  const review: Side = { ...r, failClosed: failedClosed(r.allowed, r.denies, REVIEW_TIERS, pair) };
-  const outcome = decide(block, review);
+  const verdict: Side = { ...v, failClosed: failedClosed(v.allowed, v.denies, deny, pair) };
 
   return NextResponse.json({
     ok: true,
-    outcome,
+    outcome: decide(verdict),
     to,
     from,
-    block,
-    review,
+    deny,
+    verdict,
     lookup: pair,
     decidedAt: new Date().toISOString(),
   } satisfies CheckResponse);

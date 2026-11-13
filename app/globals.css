@@ -1378,3 +1378,72 @@ body::after {
     max-width: 216px;
   }
 }
+
+/* ── Rule builder: one switch per OpenAML list ──────────── */
+.oa-tier {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+  transition: background-color 0.25s ease, border-color 0.25s ease;
+}
+.oa-tier > :first-child {
+  flex: 1;
+}
+.oa-tier:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.oa-tier.is-on {
+  background: rgba(159, 54, 25, 0.16);
+  border-color: rgba(224, 85, 46, 0.45);
+}
+.oa-tier:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.oa-tier-state {
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1;
+  font-weight: 500;
+  min-width: 40px;
+  text-align: right;
+  color: #a1a1a6;
+}
+.oa-tier.is-on .oa-tier-state {
+  color: #f2896b;
+}
+.oa-tier-track {
+  flex: none;
+  width: 36px;
+  height: 22px;
+  border-radius: 999px;
+  background: #2a2a2d;
+  padding: 3px;
+  transition: background-color 0.25s ease;
+}
+.oa-tier.is-on .oa-tier-track {
+  background: #e0552e;
+}
+.oa-tier-knob {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f4f4f5;
+  transition: transform 0.25s ease;
+}
+.oa-tier.is-on .oa-tier-knob {
+  transform: translateX(14px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .oa-tier,
+  .oa-tier-track,
+  .oa-tier-knob {
+    transition: none;
+  }
+}

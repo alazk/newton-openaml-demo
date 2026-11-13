@@ -1,7 +1,8 @@
 /**
- * Deploy the two OpenAML clients (block and review) and seed each one's policy
- * set with the OpenAML policy and its params. Verifies each client before
- * recording it. Dry run unless you pass --execute.
+ * Deploy one OpenAML client per set of tiers a visitor can choose to block
+ * (15 sets: every non-empty mix of sanctioned, blocked, fraud, flagged), and
+ * seed each one's policy set with the OpenAML policy and that set as params.
+ * Verifies each client before recording it. Dry run unless you pass --execute.
  *
  *   node scripts/compile-client.mjs
  *   NEWTON_POLICY=0x… node scripts/deploy-clients.mjs            # dry run
@@ -10,10 +11,11 @@
  * Env: NEWTON_POLICY (required), OWNER_PRIVATE_KEY (required with --execute;
  *      must be the wallet behind NEWTON_API_KEY), SEPOLIA_RPC_URL,
  *      NEWTON_POLICY_FACTORY, NEWTON_TASK_MANAGER, CLIENT_EXPIRE_AFTER
- * Flags: --execute, --only=block|review
+ * Flags: --execute, --only=<key>[,<key>]   e.g. --only=sanctioned+fraud
  *
  * Idempotent: clients already recorded in policy/out/clients.sepolia.json with
- * the right policy and params are skipped.
+ * the right policy and params are skipped. The site reads that file to find
+ * the client for a chosen set, so commit it after a deploy.
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { createPublicClient, createWalletClient, http, getAddress, stringToHex, keccak256, encodeAbiParameters, isAddress } from "viem";
@@ -32,10 +34,15 @@ const EXECUTE = process.argv.includes("--execute");
 const onlyArg = process.argv.find((a) => a.startsWith("--only="));
 const ONLY = onlyArg ? onlyArg.slice(7).split(",").map((s) => s.trim()) : null;
 
-const CLIENTS = [
-  { key: "block", env: "POLICY_CLIENT_BLOCK", params: { deny_tiers: ["sanctioned", "blocked", "fraud"] } },
-  { key: "review", env: "POLICY_CLIENT_REVIEW", params: { deny_tiers: ["flagged"] } },
-];
+const TIERS = ["sanctioned", "blocked", "fraud", "flagged"];
+// Every non-empty subset, keyed "sanctioned+blocked+fraud" (TIERS order).
+const CLIENTS = [];
+for (let mask = 1; mask < 1 << TIERS.length; mask++) {
+  const tiers = TIERS.filter((_, i) => mask & (1 << i));
+  CLIENTS.push({ key: tiers.join("+"), params: { deny_tiers: tiers } });
+}
+// The page's default set first, so a partial run still leaves the demo usable.
+CLIENTS.sort((a, b) => (b.key === "sanctioned+blocked+fraud") - (a.key === "sanctioned+blocked+fraud"));
 
 const policyAbi = [
   { type: "function", name: "version", inputs: [], outputs: [{ type: "string" }], stateMutability: "view" },
@@ -117,14 +124,12 @@ for (const c of wanted) {
     const set = await read(have, abi, "getPolicies");
     healthy = Array.isArray(set) && set.length === 1 && getAddress(set[0].policy) === POLICY && set[0].config.policyParams === paramsFor(c);
   }
-  console.log(`  ${c.key.padEnd(7)} ${have ?? "(none)"}   ${have ? (healthy ? "already correct, skipping" : "present but wrong, will redeploy") : "to deploy"}`);
-  console.log(`          params ${JSON.stringify(c.params)}`);
+  console.log(`  ${c.key.padEnd(32)} ${have ?? "(none)"}   ${have ? (healthy ? "already correct, skipping" : "present but wrong, will redeploy") : "to deploy"}`);
   if (!healthy) todo.push(c);
 }
 
 if (!todo.length) {
-  console.log("\nBoth clients are deployed and correct.");
-  printEnv();
+  console.log("\nAll clients are deployed and correct.");
   process.exit(0);
 }
 if (!EXECUTE) {
@@ -189,19 +194,9 @@ for (const c of todo) {
     process.exit(1);
   }
 
-  record[c.key] = { address: client, env: c.env, params: c.params, policy: POLICY, expireAfter: EXPIRE_AFTER, policyId: onchainId, owner: account.address, deployedAt: new Date().toISOString() };
+  record[c.key] = { address: client, params: c.params, policy: POLICY, expireAfter: EXPIRE_AFTER, policyId: onchainId, owner: account.address, deployedAt: new Date().toISOString() };
   mkdirSync("policy/out", { recursive: true });
   writeFileSync(RECORD, JSON.stringify(record, null, 2) + "\n");
 }
 
-console.log(`\nRecorded in ${RECORD}`);
-printEnv();
-
-function printEnv() {
-  const rows = CLIENTS.filter((c) => record[c.key]);
-  if (!rows.length) return;
-  console.log("\nSet these on Vercel. The addresses are also kept in " + RECORD + ", which is committed.\n");
-  for (const c of rows) {
-    console.log(`  npx vercel env rm ${c.env} production --yes 2>/dev/null; printf '%s' ${record[c.key].address} | npx vercel env add ${c.env} production`);
-  }
-}
+console.log(`\nRecorded in ${RECORD}. Commit it: the site reads the client addresses from this file.`);

@@ -13,8 +13,8 @@
 #   1. checks the repo is on GitHub and the policy can read its data
 #   2. builds and simulates the policy (clean must allow, fraud and flagged must deny)
 #   3. deploys the policy
-#   4. deploys the block and review clients (dry run first)
-#   5. runs the five real checks
+#   4. deploys one client per set of lists a visitor can block (dry run first)
+#   5. runs eight real checks
 #   6. sets the Vercel env vars, pushes, and deploys the site
 
 set -euo pipefail
@@ -140,10 +140,12 @@ fi
 export NEWTON_POLICY
 
 # ── 4. Clients ─────────────────────────────────────────────
-step "4/6  Block and review clients"
+step "4/6  Clients, one per set of lists a visitor can choose to block (15)"
 node scripts/compile-client.mjs
 node scripts/deploy-clients.mjs
-if ask "The dry run above looks right. Send the transactions?"; then
+if node scripts/deploy-clients.mjs | grep -q "All clients are deployed and correct"; then
+  echo "    nothing to send"
+elif ask "The plan above looks right. Send the transactions?"; then
   node scripts/deploy-clients.mjs --execute
 else
   stop "clients not deployed."
@@ -151,34 +153,37 @@ fi
 [ -f "$CLIENT_RECORD" ] || stop "$CLIENT_RECORD was not written."
 
 # ── 5. Real checks ─────────────────────────────────────────
-step "5/6  Five real checks"
+step "5/6  Real checks"
 check() {
-  EXPECT="$2" node scripts/task-test.mjs "$1" \
-    || stop "that check did not come back as $2. Nothing was sent to Vercel. Send Claude the output above."
+  EXPECT="$3" node scripts/task-test.mjs "$1" "$2" \
+    || stop "that check did not come back as $3. Nothing was sent to Vercel. Send Claude the output above."
 }
-check 0x1111111111111111111111111111111111111111 "ALLOWED"
-check 0x7F367cC41522cE07553e823bf3be79A889DEbe1B "BLOCKED"
-check 0x1723eb6c8fb98d2678ed186c48db11bbd12a80eb "BLOCKED"
-check 0x47666fab8bd0ac7003bce3f5c3585383f09486e2 "BLOCKED"
-check 0x1265bc855fd628aff6fed3fe4857a1b3b3597cfe "HELD FOR REVIEW"
-echo "    all five came back as expected"
+DEFAULT="sanctioned+blocked+fraud"
+check 0x1111111111111111111111111111111111111111 "$DEFAULT" "ALLOWED"
+check 0x7F367cC41522cE07553e823bf3be79A889DEbe1B "$DEFAULT" "BLOCKED"
+check 0x1723eb6c8fb98d2678ed186c48db11bbd12a80eb "$DEFAULT" "BLOCKED"
+check 0x47666fab8bd0ac7003bce3f5c3585383f09486e2 "$DEFAULT" "BLOCKED"
+check 0x1265bc855fd628aff6fed3fe4857a1b3b3597cfe "$DEFAULT" "ALLOWED"
+check 0x1265bc855fd628aff6fed3fe4857a1b3b3597cfe "flagged" "BLOCKED"
+check 0x47666fab8bd0ac7003bce3f5c3585383f09486e2 "flagged" "ALLOWED"
+check 0x1265bc855fd628aff6fed3fe4857a1b3b3597cfe "sanctioned+blocked+fraud+flagged" "BLOCKED"
+echo "    all eight came back as expected"
 
 # ── 6. Site ────────────────────────────────────────────────
 step "6/6  Vercel"
 [ -d .vercel ] || npx vercel link
-BLOCK="$(node -p "require('./$CLIENT_RECORD').block.address")"
-REVIEW="$(node -p "require('./$CLIENT_RECORD').review.address")"
 setenv() {
   npx vercel env rm "$1" production -y >/dev/null 2>&1 || true
   printf '%s' "$2" | npx vercel env add "$1" production
 }
 setenv NEWTON_API_KEY "$API_KEY"
-setenv POLICY_CLIENT_BLOCK "$BLOCK"
-setenv POLICY_CLIENT_REVIEW "$REVIEW"
+# The client addresses are public and read from the committed record, so the
+# old per-client variables are no longer used.
+npx vercel env rm POLICY_CLIENT_BLOCK production -y >/dev/null 2>&1 || true
+npx vercel env rm POLICY_CLIENT_REVIEW production -y >/dev/null 2>&1 || true
 
 bash deploy.sh "Record the deployed OpenAML policy and clients"
 
 step "Done"
-echo "    policy  $NEWTON_POLICY"
-echo "    block   $BLOCK"
-echo "    review  $REVIEW"
+echo "    policy   $NEWTON_POLICY"
+echo "    clients  $(node -p "Object.keys(require('./$CLIENT_RECORD')).length") in $CLIENT_RECORD"

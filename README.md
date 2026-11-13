@@ -5,30 +5,33 @@ transfer against 364,486 addresses labeled by
 [OpenAML](https://github.com/finos-labs/dtcch-2025-OpenAML), a FINOS Labs
 project, and sign the decision on Ethereum Sepolia before it would execute.
 
-| OpenAML tier | Addresses | What happens |
-| --- | --- | --- |
-| Sanctioned | 182 | Blocked |
-| Blocked (frozen by Tether or Circle) | 564 | Blocked |
-| Fraud (exploits and hacks) | 576 | Blocked |
-| Flagged (reported scams and phishing) | 363,271 | Held for review |
+The visitor chooses which OpenAML lists block a transfer. Everything else is
+allowed, and each check ends in one signed verdict: Blocked or Allowed.
 
-Flagged holds rather than blocks because OpenAML's Flagged entries are
-community reports with no source attached.
+| OpenAML tier | Addresses | Blocked by default |
+| --- | --- | --- |
+| Sanctioned | 182 | Yes |
+| Blocked (frozen by Tether or Circle) | 564 | Yes |
+| Fraud (exploits and hacks) | 576 | Yes |
+| Flagged (reported scams and phishing) | 363,271 | No |
+
+Flagged is off by default because OpenAML's Flagged entries are community
+reports with no source attached.
 
 ## How it works
 
 ```
-page ─▶ /api/check ─┬▶ newt_createTask ─▶ block client  ─▶ operators run policy/openaml ─▶ quorum signs
-                    └▶ newt_createTask ─▶ review client ─▶ operators run policy/openaml ─▶ quorum signs
-                                                                │
-                                          index/shards at commit e44a6dd (GitHub, jsDelivr, githack)
+page ─▶ /api/check ─▶ newt_createTask ─▶ client for the chosen lists ─▶ operators run policy/openaml ─▶ quorum signs
+                                                                              │
+                                                index/shards at commit e44a6dd (GitHub, jsDelivr, githack)
 ```
 
-- **One policy, two clients.** `policy/openaml` reports which OpenAML tiers
-  each address is in; its params say which tiers deny. The block client denies
-  Sanctioned, Blocked and Fraud. The review client denies Flagged. A Newton
-  verdict is allow or deny, so "held for review" is the review client denying
-  while the block client allows.
+- **One policy, one client per rule.** `policy/openaml` reports which OpenAML
+  tiers each address is in; a client's params say which tiers deny. There are
+  15 clients, one for every non-empty mix of the four tiers, each with its mix
+  written into its on-chain params. The page sends the chosen lists; the server
+  picks the matching client from `policy/out/clients.sepolia.json`. The choice
+  never reaches the policy as an argument a submitter could change.
 - **The data.** `index/` is OpenAML's three files split into 4,096 small
   shards, so the oracle fetches a few KB per check. It changes their format and
   drops 17 addresses no one can own (the zero address, precompiles and decoding
@@ -81,9 +84,8 @@ bash scripts/go-live.sh
 It runs every step in order and stops at the first problem: checks the index is
 served from GitHub and jsDelivr, asks for the owner key and Newton API key
 without showing them, builds and simulates the policy (clean must allow, fraud
-and flagged must deny), deploys it, deploys the two clients after a dry run, runs the five
-fixtures in `scripts/task-test.mjs`, sets the Vercel env vars and deploys the
-site. Finished steps are recorded in `policy/out/` and skipped on a rerun.
+and flagged must deny), deploys it, deploys the 15 clients after a dry run, runs
+eight real checks, sets the API key on Vercel and deploys the site. Finished steps are recorded in `policy/out/` and skipped on a rerun.
 
 ## Design
 

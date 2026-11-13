@@ -20,10 +20,10 @@ import CheckFlow, { RUN_LOOP_MS, STEP_STARTS } from "@/components/CheckFlow";
 import DataGlobe, { globeLegend } from "@/components/DataGlobe";
 import { C, H, R, SP, T, BORDER, INSET_X } from "@/lib/ds";
 import {
-  BLOCK_TIERS,
+  DEFAULT_BLOCK,
   OPENAML_COMMIT,
   OPENAML_REPO_URL,
-  REVIEW_TIERS,
+  TIERS,
   SAMPLES,
   TIER_COUNTS,
   TIER_INFO,
@@ -63,6 +63,8 @@ function middle(a: string): string {
 export default function Demo() {
   const [to, setTo] = useState("");
   const [pick, setPick] = useState<Pick>(null);
+  // Which OpenAML lists block a transfer. The visitor's rule.
+  const [deny, setDeny] = useState<Tier[]>(DEFAULT_BLOCK);
   const [focused, setFocused] = useState(false);
   const [run, setRun] = useState<Run>({ status: "idle" });
   const stageRef = useRef<HTMLDivElement>(null);
@@ -72,7 +74,7 @@ export default function Demo() {
 
   const valid = isAddress(to);
   const busy = run.status === "running";
-  const ready = valid && !busy;
+  const ready = valid && !busy && deny.length > 0;
 
   /**
    * Put the check (heading and card) in the middle of the space under the
@@ -125,7 +127,7 @@ export default function Demo() {
         fetch("/api/check", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ to }),
+          body: JSON.stringify({ to, deny }),
         }),
         shown,
       ]);
@@ -196,6 +198,8 @@ export default function Demo() {
                 onTo={onTo}
                 pick={pick}
                 onPick={onPick}
+                deny={deny}
+                onDeny={(t) => setDeny((d) => (d.includes(t) ? d.filter((x) => x !== t) : TIERS.filter((x) => x === t || d.includes(x))))}
                 ready={ready}
                 busy={busy}
                 valid={valid}
@@ -468,14 +472,16 @@ function Console(props: {
   onTo: (v: string) => void;
   pick: Pick;
   onPick: (p: Exclude<Pick, null>) => void;
+  deny: Tier[];
+  onDeny: (t: Tier) => void;
   ready: boolean;
   busy: boolean;
   valid: boolean;
   error: string | null;
   onCheck: () => void;
 }) {
-  const { to, focused, setFocused, onTo, pick, onPick, ready, busy, valid, error, onCheck } = props;
-  const hint = busy ? "" : error ? error : to && !valid ? "Not a valid address" : !valid ? "Enter a recipient" : "";
+  const { to, focused, setFocused, onTo, pick, onPick, deny, onDeny, ready, busy, valid, error, onCheck } = props;
+  const hint = busy ? "" : error ? error : to && !valid ? "Not a valid address" : !valid ? "Enter a recipient" : deny.length === 0 ? "Choose a list to block" : "";
 
   return (
     <div style={{ flex: 1, minHeight: 0, overflow: "auto", display: "flex", alignItems: "center", padding: `${SP.x4}px ${INSET_X}` }}>
@@ -483,7 +489,7 @@ function Console(props: {
         {/* Left: what is enforced, and from what data. */}
         <div className="oa-card" style={{ ["--d" as string]: "0.24s", display: "flex", flexDirection: "column", gap: SP.x2 }}>
           <div style={{ display: "flex", alignItems: "center", height: 20 }}>
-            <Head>Active policy</Head>
+            <Head>Your rule</Head>
           </div>
           <div
             style={{
@@ -496,24 +502,29 @@ function Console(props: {
               flexDirection: "column",
             }}
           >
-            <span style={{ fontFamily: SANS, ...T.h3 }}>OpenAML Address Screening</span>
-            <div style={{ ...T.value, fontFamily: SANS, color: C.body, marginTop: SP.x2, maxWidth: "48ch" }}>
-              Checks the transfer against {fmt(TOTAL_ADDRESSES)} addresses labeled by OpenAML, an open
-              source AML project in FINOS Labs. Newton Protocol operators run the check and sign the result
-              before the transfer executes.
+            <span style={{ fontFamily: SANS, ...T.h3 }}>Block a transfer if either wallet is on</span>
+
+            <div role="group" aria-label="Lists that block a transfer" style={{ display: "flex", flexDirection: "column", gap: SP.x1, marginTop: SP.x2 }}>
+              {TIERS.map((t) => (
+                <TierSwitch key={t} tier={t} on={deny.includes(t)} disabled={busy} onToggle={() => onDeny(t)} />
+              ))}
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: SP.x1, marginTop: SP.x3 }}>
-              <RuleRow action="Block" tone="flag" tiers={BLOCK_TIERS} />
-              <RuleRow action="Hold for review" tone="caution" tiers={REVIEW_TIERS} />
+            <div style={{ ...small(), color: deny.length ? C.body : C.error, marginTop: SP.x2 }}>
+              {deny.length === 0
+                ? "Choose at least one list to block."
+                : deny.length === TIERS.length
+                  ? "A wallet on none of these lists is allowed."
+                  : `Allowed: wallets on no list, or only on ${joinTiers(TIERS.filter((t) => !deny.includes(t)))}.`}
             </div>
 
-            <div style={{ marginTop: "auto", paddingTop: SP.x3, ...small(), color: C.muted }}>
-              Data:{" "}
+            <div style={{ marginTop: "auto", paddingTop: SP.x2, ...small(), color: C.muted }}>
+              {fmt(TOTAL_ADDRESSES)} addresses from{" "}
               <a href={`${OPENAML_REPO_URL}/tree/${OPENAML_COMMIT}/Data`} target="_blank" rel="noreferrer" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
-                OpenAML lists, commit {OPENAML_COMMIT.slice(0, 7)}
+                OpenAML, commit {OPENAML_COMMIT.slice(0, 7)}
               </a>
-              . Apache 2.0. Screens the sender and the recipient of a native ETH transfer.
+              . Newton Protocol operators run the check and sign the verdict. Screens the sender and the recipient of a
+              native ETH transfer.
             </div>
           </div>
         </div>
@@ -600,24 +611,31 @@ function Console(props: {
   );
 }
 
-function RuleRow({ action, tone, tiers }: { action: string; tone: "flag" | "caution"; tiers: Tier[] }) {
-  const color = tone === "flag" ? C.flagText : C.caution;
-  const wash = tone === "flag" ? C.flagWash : C.cautionWash;
+function TierSwitch({ tier, on, disabled, onToggle }: { tier: Tier; on: boolean; disabled: boolean; onToggle: () => void }) {
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "auto minmax(0, 1fr)", alignItems: "baseline", gap: SP.x1_5 }}>
-      <span style={{ ...small(), fontWeight: 500, color, background: wash, borderRadius: R.pill, padding: `${SP.half}px ${SP.x1_5}px`, whiteSpace: "nowrap", justifySelf: "start" }}>
-        {action}
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      aria-label={`${TIER_INFO[tier].name}: ${on ? "blocked" : "allowed"}`}
+      disabled={disabled}
+      onClick={onToggle}
+      className={`pe-reset oa-tier ${on ? "is-on" : ""}`}
+    >
+      <span style={{ minWidth: 0, textAlign: "left" }}>
+        <span style={{ fontFamily: SANS, ...T.label, color: C.ink }}>
+          {TIER_INFO[tier].name}
+          <span style={{ color: C.muted, fontWeight: 400 }}> · {fmt(TIER_COUNTS[tier])}</span>
+        </span>
+        <span style={{ display: "block", ...small(), color: C.muted }}>{TIER_INFO[tier].meaning}</span>
       </span>
-      <span style={{ ...T.value, fontFamily: SANS, color: C.ink }}>
-        {tiers.map((t, i) => (
-          <span key={t}>
-            {i > 0 && (i === tiers.length - 1 ? " and " : ", ")}
-            {TIER_INFO[t].name}
-            <span style={{ color: C.muted }}> ({fmt(TIER_COUNTS[t])})</span>
-          </span>
-        ))}
+      <span className="oa-tier-state" aria-hidden>
+        {on ? "Block" : "Allow"}
       </span>
-    </div>
+      <span className="oa-tier-track" aria-hidden>
+        <span className="oa-tier-knob" />
+      </span>
+    </button>
   );
 }
 
@@ -695,7 +713,6 @@ function Head({ children }: { children: React.ReactNode }) {
 
 const HEADLINE: Record<Done["outcome"], string> = {
   allowed: "Allowed",
-  review: "Held for review",
   blocked: "Blocked",
   unavailable: "Screening unavailable",
   none: "No decision",
@@ -703,7 +720,6 @@ const HEADLINE: Record<Done["outcome"], string> = {
 
 const TONE: Record<Done["outcome"], string> = {
   allowed: C.passText,
-  review: C.caution,
   blocked: C.flagText,
   unavailable: C.neutralText,
   none: C.neutralText,
@@ -712,7 +728,6 @@ const TONE: Record<Done["outcome"], string> = {
 /** A soft glow in the outcome's tone; none for states that decided nothing. */
 const GLOW: Record<Done["outcome"], string> = {
   allowed: "0 0 28px rgba(98, 214, 168, 0.35)",
-  review: "0 0 28px rgba(227, 180, 90, 0.35)",
   blocked: "0 0 32px rgba(224, 85, 46, 0.55)",
   unavailable: "none",
   none: "none",
@@ -727,55 +742,42 @@ function joinTiers(tiers: Tier[]): string {
 }
 
 function explain(r: Done): { reason: string; note: string | null } {
-  const listing = r.lookup?.to;
-  const blockHits = listing?.tiers.filter((t) => BLOCK_TIERS.includes(t)) ?? [];
-  const reviewHits = listing?.tiers.filter((t) => REVIEW_TIERS.includes(t)) ?? [];
-  const fromTiers = r.lookup?.from.tiers ?? [];
-  const noLookup = "Which OpenAML tier matched could not be looked up just now. The signed verdict stands.";
+  const mine = (tiers: Tier[] | undefined) => (tiers ?? []).filter((t) => r.deny.includes(t));
+  const toHits = mine(r.lookup?.to.tiers);
+  const fromHits = mine(r.lookup?.from.tiers);
+  const others = (r.lookup?.to.tiers ?? []).filter((t) => !r.deny.includes(t));
+  const noLookup = "Which OpenAML list matched could not be looked up just now. The signed verdict stands.";
   // Only reachable when the signed deny reasons name a match the lookup cannot find.
-  const disagree = "A fresh lookup of the same OpenAML data finds neither address in this tier, which disagrees with the signed verdict. The signed verdict stands.";
+  const disagree = "A fresh lookup of the same OpenAML data finds neither address on a list your rule blocks, which disagrees with the signed verdict. The signed verdict stands.";
 
   switch (r.outcome) {
     case "blocked":
-      if (blockHits.length) {
-        return {
-          reason: `OpenAML lists the recipient as ${joinTiers(blockHits)}: ${TIER_INFO[blockHits[0]].meaning}. The policy denied the transfer, so it does not execute.`,
-          note: null,
-        };
+      if (toHits.length) {
+        return { reason: `OpenAML lists the recipient as ${joinTiers(toHits)}: ${TIER_INFO[toHits[0]].meaning}. Your rule blocks that, so the transfer does not execute.`, note: null };
       }
-      if (fromTiers.some((t) => BLOCK_TIERS.includes(t))) {
-        return { reason: `OpenAML lists the sender as ${joinTiers(fromTiers.filter((t) => BLOCK_TIERS.includes(t)))}. The policy denied the transfer, so it does not execute.`, note: null };
+      if (fromHits.length) {
+        return { reason: `OpenAML lists the sender as ${joinTiers(fromHits)}. Your rule blocks that, so the transfer does not execute.`, note: null };
       }
       return { reason: "The policy denied the transfer, so it does not execute.", note: r.lookup ? disagree : noLookup };
-    case "review":
-      if (reviewHits.length) {
+    case "allowed":
+      if (others.length) {
         return {
-          reason: `OpenAML lists the recipient as Flagged: ${TIER_INFO.flagged.meaning}. The transfer waits until a person approves it.`,
-          note: "Flagged is a community report with no source attached, so it holds the transfer rather than blocking it.",
+          reason: `OpenAML lists the recipient as ${joinTiers(others)}, which your rule allows. The transfer can go ahead.`,
+          note: `Turn on ${joinTiers(others)} in your rule and the same wallet is blocked.`,
         };
       }
-      if (fromTiers.includes("flagged")) {
-        return { reason: "OpenAML lists the sender as Flagged. The transfer waits until a person approves it.", note: null };
-      }
-      return { reason: "The policy held the transfer until a person approves it.", note: r.lookup ? disagree : noLookup };
-    case "allowed":
-      return {
-        reason: "The recipient is in none of the OpenAML tiers the policy acts on. The policy allowed the transfer.",
-        note: null,
-      };
+      return { reason: "The recipient is on none of the lists your rule blocks. The transfer can go ahead.", note: null };
     case "unavailable":
       return {
         reason:
           "The operators could not read OpenAML's data for this check, so the policy refused the transfer rather than guess. It does not execute. This says nothing about the recipient.",
         note: "This is the policy working as intended: data it cannot read is treated the same as a match, never as a pass.",
       };
-    case "none": {
-      const why = [r.block.error, r.review.error].find((e) => e && e !== READ_ERROR) ?? null;
+    case "none":
       return {
         reason: "Newton Protocol did not return a readable verdict, so nothing was decided. This does not mean the recipient is clear.",
-        note: why,
+        note: r.verdict.error && r.verdict.error !== READ_ERROR ? r.verdict.error : null,
       };
-    }
   }
 }
 
@@ -817,8 +819,8 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
                   ...small(),
                   borderRadius: R.pill,
                   padding: `${SP.half}px ${SP.x1_5}px`,
-                  background: BLOCK_TIERS.includes(t) ? C.flagWash : C.cautionWash,
-                  color: BLOCK_TIERS.includes(t) ? C.flagText : C.caution,
+                  background: result.deny.includes(t) ? C.flagWash : C.neutralWash,
+                  color: result.deny.includes(t) ? C.flagText : C.neutralText,
                   ["--d" as string]: `${0.32 + i * 0.08}s`,
                 }}
               >
@@ -831,7 +833,7 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
         {note && <div className="oa-rise" style={{ ["--d" as string]: "0.38s", ...small(), color: C.body, marginTop: SP.x2, maxWidth: "54ch" }}>{note}</div>}
       </>
 
-      {/* One verdict. It rests on two signed answers (block and review), linked as its attestations. */}
+      {/* The one signed verdict, with its attestation and the rule it was checked against. */}
       <div style={{ marginTop: SP.x4 }}>
         <VerdictRow result={result} delay={0.46} />
       </div>
@@ -865,49 +867,32 @@ function Decision({ result, stale, onReset }: { result: Done; stale: boolean; on
 function VerdictRow({ result, delay }: { result: Done; delay: number }) {
   const o = result.outcome;
   // A denial that came from failing to screen is grey, not red (lib/outcome.ts).
-  const text = { allowed: "Allowed", blocked: "Blocked", review: "Held for review", unavailable: "Not screened", none: "No answer" }[o];
-  const color = o === "allowed" ? C.passText : o === "blocked" ? C.flagText : o === "review" ? C.caution : C.neutralText;
-  const wash = o === "allowed" ? C.passWash : o === "blocked" ? C.flagWash : o === "review" ? C.cautionWash : C.neutralWash;
-  // A block is proven by the block answer alone. Every other outcome needs both.
-  const sides = o === "blocked" ? [result.block] : [result.block, result.review];
-  const links = sides.map((x) => x.explorerUrl).filter((u): u is string => Boolean(u));
-  const linkStyle: React.CSSProperties = { ...small(), color: C.ink, textDecoration: "underline", textUnderlineOffset: 3, whiteSpace: "nowrap" };
+  const text = { allowed: "Allowed", blocked: "Blocked", unavailable: "Not screened", none: "No answer" }[o];
+  const color = o === "allowed" ? C.passText : o === "blocked" ? C.flagText : C.neutralText;
+  const wash = o === "allowed" ? C.passWash : o === "blocked" ? C.flagWash : C.neutralWash;
+  const url = result.verdict.explorerUrl;
   return (
     <div
       className="oa-left"
       style={{
         ["--d" as string]: `${delay}s`,
-        display: "flex",
-        alignItems: "center",
-        flexWrap: "wrap",
-        columnGap: SP.x1_5,
-        rowGap: SP.half,
         padding: `${SP.x1_5}px ${SP.x2}px`,
         border: `${BORDER}px solid ${C.hairline}`,
         borderRadius: R.md,
       }}
     >
-      <span style={{ ...label(), color: C.ink }}>Signed verdict</span>
-      <span style={{ ...small(), fontWeight: 500, color, background: wash, borderRadius: R.pill, padding: `${SP.half}px ${SP.x1_5}px`, whiteSpace: "nowrap" }}>{text}</span>
-      <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: SP.x1_5 }}>
-        {links.length === 0 && <span style={{ ...small(), color: C.muted }}>No attestation</span>}
-        {links.length === 1 && (
-          <a href={links[0]} target="_blank" rel="noreferrer" style={linkStyle}>
+      <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", columnGap: SP.x1_5, rowGap: SP.half }}>
+        <span style={{ ...label(), color: C.ink }}>Signed verdict</span>
+        <span style={{ ...small(), fontWeight: 500, color, background: wash, borderRadius: R.pill, padding: `${SP.half}px ${SP.x1_5}px`, whiteSpace: "nowrap" }}>{text}</span>
+        {url ? (
+          <a href={url} target="_blank" rel="noreferrer" style={{ ...small(), marginLeft: "auto", color: C.ink, textDecoration: "underline", textUnderlineOffset: 3, whiteSpace: "nowrap" }}>
             Attestation ↗
           </a>
+        ) : (
+          <span style={{ ...small(), marginLeft: "auto", color: C.muted }}>No attestation</span>
         )}
-        {links.length === 2 && (
-          <>
-            <span style={{ ...small(), color: C.muted }}>Attestations</span>
-            <a href={links[0]} target="_blank" rel="noreferrer" style={linkStyle} aria-label="First attestation">
-              1 ↗
-            </a>
-            <a href={links[1]} target="_blank" rel="noreferrer" style={linkStyle} aria-label="Second attestation">
-              2 ↗
-            </a>
-          </>
-        )}
-      </span>
+      </div>
+      <div style={{ ...small(), color: C.muted, marginTop: SP.x1 }}>Your rule: block {joinTiers(result.deny)}.</div>
     </div>
   );
 }
