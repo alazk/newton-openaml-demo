@@ -12,9 +12,11 @@
  * fetches only the one or two shards it needs, so a check reads a few KB
  * instead of OpenAML's 12 MB.
  *
- * This is a mechanical copy, not a second dataset. No label is added, removed
- * or reinterpreted, apart from mapping OpenAML's label names to four tier
- * names. Anyone can rerun this against the same OpenAML commit and get
+ * This is a mechanical copy, not a second dataset. No label is added or
+ * reinterpreted, apart from mapping OpenAML's label names to four tier names.
+ * One rule removes entries: addresses whose first 16 hex characters are all
+ * zero (see UNOWNABLE below). Every removed row is listed in manifest.json.
+ * Anyone can rerun this against the same OpenAML commit and get
  * byte-identical files, which is how the index can be checked.
  *
  * Every shard is written, including empty ones, so a missing file always
@@ -48,6 +50,17 @@ const FILES = [
 ];
 const TIER_ORDER = ["sanctioned", "blocked", "fraud", "flagged"];
 
+/**
+ * Addresses no one can hold a key for: the zero address, the precompiles
+ * (0x…01 to 0x…0a) and other values with at least 64 leading zero bits.
+ * Finding a key for one would take about 2^64 tries, and the longest vanity
+ * prefixes in OpenAML's own data are 12 zeros. OpenAML's Blocked list has 17
+ * such rows (0x0, 0x1, 0x18, 0x0000000000000000880620…), most likely left
+ * over from decoding freeze events. Kept, they would block every transfer to
+ * the zero address and the precompiles, which says nothing about any wallet.
+ */
+const UNOWNABLE = /^0x0{16}/i;
+
 const commit = execFileSync("git", ["-C", SRC, "rev-parse", "HEAD"]).toString().trim();
 const sha256 = (buf) => createHash("sha256").update(buf).digest("hex");
 
@@ -56,6 +69,7 @@ const index = new Map();
 const sources = [];
 const rowsPerTier = Object.fromEntries(TIER_ORDER.map((t) => [t, 0]));
 const rejected = [];
+const excluded = [];
 
 for (const { file, labels, prefixMatch } of FILES) {
   const path = join(SRC, file);
@@ -74,6 +88,10 @@ for (const { file, labels, prefixMatch } of FILES) {
       continue;
     }
     const a = address.toLowerCase();
+    if (UNOWNABLE.test(a)) {
+      excluded.push({ file, chain, address: a, label });
+      continue;
+    }
     let tiers = index.get(a);
     if (!tiers) index.set(a, (tiers = new Map()));
     let chains = tiers.get(tier);
@@ -130,6 +148,10 @@ const manifest = {
   },
   shard: { prefix_length: PREFIX_LEN, count: shards.size, path: "index/shards/<prefix>.json", largest_bytes: largest },
   addresses: index.size,
+  excluded: {
+    rule: "first 16 hex characters of the address are zero (no one can hold its key)",
+    rows: excluded.sort((x, y) => (x.address < y.address ? -1 : x.address > y.address ? 1 : 0)),
+  },
   addresses_per_tier: addressesPerTier,
   rows_per_tier: rowsPerTier,
   tiers: {
@@ -140,4 +162,4 @@ const manifest = {
   },
 };
 writeFileSync(join(HERE, "manifest.json"), JSON.stringify(manifest, null, 2) + "\n");
-console.log(JSON.stringify({ commit, addresses: index.size, addressesPerTier, largest }, null, 1));
+console.log(JSON.stringify({ commit, addresses: index.size, addressesPerTier, excluded: excluded.length, largest }, null, 1));

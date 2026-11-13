@@ -23,18 +23,125 @@
     "prefix_length": 3,
     "count": 4096,
     "path": "index/shards/<prefix>.json",
-    "largest_bytes": 123063
+    "largest_bytes": 121873
   },
-  "addresses": 364503,
+  "addresses": 364486,
+  "excluded": {
+    "rule": "first 16 hex characters of the address are zero (no one can hold its key)",
+    "rows": [
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000000000000000000",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000000000000000001",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000000000000000018",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000000000000000019",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x000000000000000000000000000000000000001a",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x000000000000000000000000000000000000001e",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x000000000000000000000000000000000000015d",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x00000000000000000000000000000000000001f2",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000000000000000aa3",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000000000000000e33",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000000000000000fdc",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x000000000000000000000000000000000000129f",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x00000000000000000000000000000000000012e5",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x00000000000000000000000000000000000018fe",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000000018148086009",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000000000000001fc24fe892306",
+        "label": "Blocked"
+      },
+      {
+        "file": "Data/address_sanctioned.csv.gz",
+        "chain": "Ethereum",
+        "address": "0x0000000000000000880620000000203571704007",
+        "label": "Blocked"
+      }
+    ]
+  },
   "addresses_per_tier": {
     "sanctioned": 182,
-    "blocked": 581,
+    "blocked": 564,
     "fraud": 576,
     "flagged": 363271
   },
   "rows_per_tier": {
     "sanctioned": 226,
-    "blocked": 581,
+    "blocked": 564,
     "fraud": 1407,
     "flagged": 490375
   },
