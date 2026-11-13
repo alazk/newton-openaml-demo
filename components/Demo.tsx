@@ -13,12 +13,12 @@
  *      grey, headed "Screening unavailable" (lib/outcome.ts decides when).
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import CheckFlow, { RUN_LOOP_MS, STEP_STARTS } from "@/components/CheckFlow";
 import DataGlobe, { globeLegend } from "@/components/DataGlobe";
 import { C, H, MOTION, R, SP, T, BORDER } from "@/lib/ds";
-import { DEFAULT_BLOCK, OPENAML_COMMIT, OPENAML_REPO_URL, TIERS, SAMPLES, TIER_COUNTS, TIER_INFO, TOTAL_ADDRESSES, type Tier } from "@/lib/openaml";
+import { DEFAULT_BLOCK, TIERS, SAMPLES, TIER_COUNTS, TIER_INFO, TOTAL_ADDRESSES, type Tier } from "@/lib/openaml";
 import type { CheckResponse } from "@/app/api/check/route";
 
 const SANS = "var(--sans)";
@@ -167,6 +167,7 @@ export default function Demo() {
         aria-atomic={view === "home" ? undefined : true}
       >
         <div className="oa-app-glow" aria-hidden key={run.status === "done" ? run.result.decidedAt : view} />
+        <Fit>
         {run.status === "done" ? (
           <Decision result={run.result} deny={deny} onToggle={toggle} onAgain={() => check(run.result.to)} onReset={reset} />
         ) : run.status === "running" ? (
@@ -189,8 +190,63 @@ export default function Demo() {
             kick={kick}
           />
         )}
+        </Fit>
       </main>
-      <Footer />
+    </div>
+  );
+}
+
+/**
+ * One screen, never a scrollbar. The screen is laid out at full size and, only
+ * when it is taller than the space under the nav, scaled down until it fits.
+ * Laying it out wider by the same factor first keeps it filling the width, so
+ * text reflows instead of leaving side gutters. Layouts are designed to fit
+ * at common sizes; this is the guarantee for the rest.
+ */
+function Fit({ children }: { children: React.ReactNode }) {
+  const outer = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  const useIso = typeof window === "undefined" ? useEffect : useLayoutEffect;
+  useIso(() => {
+    const o = outer.current;
+    const i = inner.current;
+    if (!o || !i) return;
+    let s = 1;
+    let busy = false;
+    const apply = () => {
+      if (busy) return;
+      busy = true;
+      const avail = o.clientHeight;
+      // A few passes: a smaller scale lays the screen out wider, which makes it shorter.
+      for (let n = 0; n < 4; n++) {
+        i.style.width = `${100 / s}%`;
+        const h = i.offsetHeight;
+        const next = h > avail ? Math.max(0.5, Math.floor((avail / h) * 1000) / 1000) : 1;
+        if (Math.abs(next - s) < 0.002) break;
+        s = next;
+      }
+      i.style.width = `${100 / s}%`;
+      // If the last pass still overflows, one more step down always fits:
+      // a smaller scale only ever makes the laid-out screen shorter.
+      if (i.offsetHeight * s > avail + 0.5) {
+        s = Math.max(0.5, Math.floor((avail / i.offsetHeight) * 1000) / 1000);
+        i.style.width = `${100 / s}%`;
+      }
+      const h = i.offsetHeight * s;
+      i.style.transform = `translateY(${Math.max(0, (avail - h) / 2)}px) scale(${s})`;
+      busy = false;
+    };
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(o);
+    ro.observe(i);
+    return () => ro.disconnect();
+  }, []);
+  return (
+    <div ref={outer} className="oa-fit">
+      <div ref={inner} className="oa-fit-in">
+        {children}
+      </div>
     </div>
   );
 }
@@ -271,10 +327,7 @@ function Home(props: {
   return (
     <section className={`oa-home ${on ? "oa-on" : ""}`} aria-labelledby="hero-title">
       <div>
-        <div className="oa-in" style={{ ["--d" as string]: "0.05s" }}>
-          <Eyebrow>Newton Protocol × FINOS OpenAML</Eyebrow>
-        </div>
-        <h1 id="hero-title" className="oa-h1 oa-in" style={{ ["--d" as string]: "0.13s", marginTop: SP.x2 }}>
+        <h1 id="hero-title" className="oa-h1 oa-in" style={{ ["--d" as string]: "0.05s" }}>
           Check a wallet before you pay it.
         </h1>
         <p className="oa-lead oa-in" style={{ ["--d" as string]: "0.22s", fontFamily: SANS }}>
@@ -430,36 +483,6 @@ function Running({ to }: { to: string }) {
         <CheckFlow address={`${to.slice(0, 6)}…${to.slice(-4)}`} speed="running" />
       </div>
     </section>
-  );
-}
-
-/* ── Footer ─────────────────────────────────────────────── */
-
-function Footer() {
-  const link: React.CSSProperties = { textDecoration: "underline", textUnderlineOffset: 3 };
-  return (
-    <footer className="oa-wrap oa-footer" style={{ paddingBlock: SP.x4, borderTop: `1px solid ${C.hairline}` }}>
-      <div className="oa-cobrand oa-cobrand-lg">
-        <img src="/newton-logo-white.svg" alt="Newton Protocol" className="oa-logo-newton" />
-        <span className="oa-cobrand-rule" aria-hidden />
-        <a href={OPENAML_REPO_URL} target="_blank" rel="noreferrer" aria-label="FINOS OpenAML on GitHub" className="oa-finos-row">
-          <img src="/finos-icon-white.svg" alt="" className="oa-finos-icon" />
-          <img src="/finos-wordmark-white.svg" alt="" className="oa-finos-word" />
-          <span className="oa-openaml">OpenAML</span>
-        </a>
-      </div>
-      <p style={{ margin: 0, ...small(), color: C.muted, lineHeight: 1.7 }}>
-        A Newton Protocol demo on Ethereum Sepolia. Data:{" "}
-        <a href={`${OPENAML_REPO_URL}/tree/${OPENAML_COMMIT}/Data`} target="_blank" rel="noreferrer" style={link}>
-          OpenAML lists
-        </a>{" "}
-        (FINOS Labs, Apache 2.0), commit {OPENAML_COMMIT.slice(0, 7)}. Policy and site:{" "}
-        <a href="https://github.com/alazk/newton-openaml-demo" target="_blank" rel="noreferrer" style={link}>
-          github.com/alazk/newton-openaml-demo
-        </a>
-        .
-      </p>
-    </footer>
   );
 }
 
@@ -727,13 +750,17 @@ function Decision({
       {/* The rule, live: flip a switch and run the same wallet again. */}
       <aside className="oa-verdict-rule oa-card-in" style={{ ["--d" as string]: "0.3s" }} aria-label="Your rule">
         <div style={{ ...label(), color: C.ink }}>Your rule</div>
-        <div style={{ ...small(), color: C.muted, marginTop: 2 }}>Block the transfer if either wallet is on</div>
-        <div className="oa-tiers" role="group" aria-label="Lists that block a transfer">
+        {/* Phones: the rule in one line. Changing it happens on the first screen. */}
+        <div className="oa-narrow-only" style={{ ...small(), color: C.muted, marginTop: 2 }}>
+          Block {joinTiers(result.deny)}.
+        </div>
+        <div className="oa-wide-only" style={{ ...small(), color: C.muted, marginTop: 2 }}>Block the transfer if either wallet is on</div>
+        <div className="oa-tiers oa-wide-only" role="group" aria-label="Lists that block a transfer">
           {TIERS.map((t) => (
             <TierSwitch key={t} tier={t} on={deny.includes(t)} disabled={false} onToggle={() => onToggle(t)} hit={hits.includes(t)} />
           ))}
         </div>
-        <div style={{ ...small(), color: deny.length ? C.muted : C.error, marginTop: SP.x1_5, minHeight: 34 }}>
+        <div className="oa-wide-only" style={{ ...small(), color: deny.length ? C.muted : C.error, marginTop: SP.x1_5, minHeight: 34 }}>
           {deny.length === 0
             ? "Choose at least one list to block."
             : changed
@@ -744,7 +771,7 @@ function Decision({
           type="button"
           onClick={onAgain}
           disabled={!changed}
-          className={`pe-reset ${changed ? "pe-dark" : ""}`}
+          className={`pe-reset oa-wide-only ${changed ? "pe-dark" : ""}`}
           style={{
             marginTop: SP.x1,
             height: H.action,

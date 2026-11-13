@@ -97,7 +97,7 @@ Two brand faces (newt.foundation/brand): **GT Sectra Fine LCG** for display and 
 
 ## 5. Layout
 
-**Page, top to bottom:** floating nav, hero, tagline, the check section, footer. Sections sit in a 1440px column with `clamp(16px, 4vw, 48px)` side padding.
+**Page:** one screen. A floating nav, then the screen for the current state (the form beside the globe, running, or the verdict). Content sits in a 1440px column with `clamp(16px, 4vw, 48px)` side padding.
 
 **Atmosphere:** film grain over the whole page (a fixed SVG `feTurbulence` overlay at 7% opacity, `pointer-events: none`), and soft Sand glows behind the hero visual and the check (a radial gradient of `#D6B376` from 30% to transparent, blurred 60px, behind content and never over text). The stage carries a thin Sand light along its top edge (a 1px gradient line, transparent to `#D6B376` to transparent).
 
@@ -117,7 +117,7 @@ Two brand faces (newt.foundation/brand): **GT Sectra Fine LCG** for display and 
 
 **Check diagram:** near-black boxes (`#0E0E10`, `#2A2A2D` outline) for the transfer (short address), Newton Protocol operators (four dots), the data source with its version or commit, and the verdict signed on Sepolia, joined by hairlines with marching dashes. Pulses travel transfer to operators, out to the data and back, then to the verdict; boxes outline in white as a pulse reaches them; operator dots light in turn; pulses are white with a soft glow. SVG `animateMotion` (no JS clock), 5.2s loop at rest, 7s while checking. A wide layout from 640px and a stacked one below. Every box must be true of the deployed policy.
 
-**Footer:** one line of caption type above a hairline: the network, the data source with commit and licence, and the repo.
+**No footer, no eyebrow over the hero, no scrolling.** The demo is one screen at every window size, phones included: the page is exactly the window (`html, body { overflow: hidden }`), and each state (form, running, verdict) is laid out in the space under the nav. Layouts are designed to fit at common sizes (1920×1080, 1440×900, 1536×864, 1280×800, 768×1024, 390×844) without help; below that, `<Fit>` in `Demo.tsx` lays the screen out wider and scales it down until it fits, never below 0.5. On one-column layouts the hero globe is hidden and the verdict shows the rule as one line ("Block Sanctioned, Blocked and Fraud.") with "Check another wallet"; the rule is changed on the first screen. Credit for the data lives in the nav's co-brand and the repo, not in a footer. Before shipping, measure every state at those sizes: `document.documentElement.scrollHeight` must equal `innerHeight`.
 
 **Console:** two columns from 1024px, one below. Left: the rule card. When the visitor can choose the rule, it is one switch per option (name, real count, one line on what it means, "Block" or "Allow"; a switch set to Block is the only red on the screen), a plain line saying what gets through, and the data source with commit. Each choice must map to a client whose on-chain params hold that rule; the choice is never passed to the policy as an argument. Right: the transfer (labelled field, sample picks as a segmented control, a summary of the check about to run as a short definition list: sender, recipient, the rule, who checks it; then the primary action). The right column is never left with a large empty gap. One check gives one signed verdict and one attestation link. Headings on both columns share one fixed-height row so they line up.
 
