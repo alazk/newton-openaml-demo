@@ -7,7 +7,7 @@
  * about 140), and the colours follow the real tier counts: Flagged dots are
  * dim gold, the blocking tiers (Sanctioned, Blocked, Fraud) glow brand red.
  * That makes the red dots rare, which is the true shape of the data: 1,322 of
- * 364,486 addresses. A red scan ring sweeps the globe; red dots flare as it
+ * 364,486 addresses. A sand scan ring sweeps the globe; bright dots flare as it
  * passes, standing for the screening.
  *
  * Canvas 2D with its own projection, no 3D library. Pauses off screen and in
@@ -20,8 +20,10 @@ import { SEVERE_TIERS, TIER_COUNTS, TIER_INFO, TOTAL_ADDRESSES, type Tier } from
 const DOTS = 2600;
 const PER_DOT = TOTAL_ADDRESSES / DOTS;
 
-const GOLD = [227, 180, 90] as const;
-const RED = [224, 85, 46] as const;
+// Brand Sand for Flagged; Bone, brighter, for the three severe tiers. Red is
+// kept for a Blocked verdict only.
+const GOLD = [214, 179, 118] as const;
+const RED = [254, 253, 249] as const;
 
 type Pt = { x: number; y: number; z: number; red: boolean; phase: number };
 
@@ -157,7 +159,7 @@ export default function DataGlobe() {
           }
           ctx.lineTo(q.sx, q.sy);
         }
-        ctx.strokeStyle = pass === 1 ? "rgba(224,85,46,0.75)" : "rgba(224,85,46,0.18)";
+        ctx.strokeStyle = pass === 1 ? "rgba(214,179,118,0.8)" : "rgba(214,179,118,0.2)";
         ctx.shadowColor = "rgba(224,85,46,0.9)";
         ctx.shadowBlur = pass === 1 ? 12 : 0;
         ctx.stroke();
@@ -271,7 +273,7 @@ export default function DataGlobe() {
                 ["--bob" as string]: c.bob,
               }}
             >
-              <i style={{ background: red ? "#E0552E" : "#E3B45A", boxShadow: `0 0 10px ${red ? "rgba(224,85,46,0.9)" : "rgba(227,180,90,0.6)"}` }} />
+              <i style={{ background: red ? "#FEFDF9" : "#D6B376", boxShadow: `0 0 10px ${red ? "rgba(254,253,249,0.8)" : "rgba(227,180,90,0.6)"}` }} />
               {TIER_INFO[c.tier].name} <b>{TIER_COUNTS[c.tier].toLocaleString("en-US")}</b>
             </span>
           );
@@ -284,5 +286,5 @@ export default function DataGlobe() {
 /** The legend under the globe, from the same numbers it draws. */
 export function globeLegend(): string {
   const blocking = SEVERE_TIERS.reduce((n, t) => n + TIER_COUNTS[t], 0);
-  return `OpenAML's lists as ${DOTS.toLocaleString("en-US")} dots, about ${Math.round(PER_DOT)} addresses each. Red: Sanctioned, Blocked and Fraud, ${blocking.toLocaleString("en-US")} addresses. Gold: Flagged, ${TIER_COUNTS.flagged.toLocaleString("en-US")}.`;
+  return `OpenAML's lists as ${DOTS.toLocaleString("en-US")} dots, about ${Math.round(PER_DOT)} addresses each. Bright: Sanctioned, Blocked and Fraud, ${blocking.toLocaleString("en-US")} addresses. Sand: Flagged, ${TIER_COUNTS.flagged.toLocaleString("en-US")}.`;
 }

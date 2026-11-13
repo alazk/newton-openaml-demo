@@ -20,7 +20,7 @@ import { useEffect, useId, useRef } from "react";
 
 // Dark theme: boxes are near-black glass, a lit box outlines in white, the
 // pulses are white with a glow.
-const INK = "#F4F4F5";
+const INK = "#FEFDF9";
 const HAIR = "#2A2A2D";
 const MUTED = "#A1A1A6";
 const BOX = "#0E0E10";

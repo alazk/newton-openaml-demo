@@ -90,7 +90,7 @@ export const T = {
  * lighter tint of its hue that clears 4.5:1 on the wash.
  */
 export const C = {
-  ink: "#F4F4F5",
+  ink: "#FEFDF9",
   ink2: "#A1A1A6",
   field: "#1A1A1C",
   surface: "#0C0C0D",
@@ -103,8 +103,8 @@ export const C = {
   muted: "#A1A1A6",
   muted2: "#86868B",
 
-  accent: "#F4F4F5",
-  accentHover: "#D4D4D8",
+  accent: "#FEFDF9",
+  accentHover: "#E9E6DC",
   accentTint: "#1A1A1C",
 
   pass: "#2FBF85",
@@ -119,8 +119,8 @@ export const C = {
   /** Fail closed: a denial because data could not be read. Grey, never red. */
   neutralText: "#A1A1A6",
   neutralWash: "#1A1A1C",
-  caution: "#E3B45A",
-  cautionWash: "rgba(138, 94, 20, 0.30)",
+  caution: "#D6B376",
+  cautionWash: "rgba(214, 179, 118, 0.16)",
 } as const;
 
 export const BORDER = 1;

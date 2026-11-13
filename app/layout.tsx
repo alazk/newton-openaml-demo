@@ -10,7 +10,7 @@ const TITLE = "Newton Protocol × FINOS OpenAML: wallet screening demo";
 const DESCRIPTION =
   "Check a wallet before you pay it. The transfer is screened against 364,486 addresses labeled by OpenAML, a FINOS Labs project, and Newton Protocol operators sign the decision on Ethereum Sepolia before it executes.";
 
-export const viewport: Viewport = { themeColor: "#000000", colorScheme: "dark" };
+export const viewport: Viewport = { themeColor: "#010101", colorScheme: "dark" };
 
 // Share images need an absolute URL. Vercel sets the production host at build
 // time; locally the preview falls back to localhost.

@@ -1447,3 +1447,68 @@ body::after {
     transition: none;
   }
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   Newton brand (newt.foundation/brand): Coal #010101, Bone #FEFDF9, Sand
+   #D6B376. Sand is the accent and every ambient light. Red is kept for one
+   thing: a Blocked verdict and a list switched to Block. Keep this last.
+   ════════════════════════════════════════════════════════════════════════ */
+:root {
+  --coal: #010101;
+  --bone-ink: #fefdf9;
+  --sand: #d6b376;
+  --ink: #fefdf9;
+  --surface: #010101;
+  --bone: #010101;
+  --accent: #fefdf9;
+  --accent-hover: #e9e6dc;
+  --caution: #d6b376;
+  --glow: #d6b376;
+  /* Display face. The brand's is GT Sectra Fine LCG; until its web files are
+     in the repo this is Inter. To switch: add the @font-face and put
+     "GT Sectra Fine" first here. */
+  --display: var(--sans);
+}
+body,
+.oa-page {
+  background: var(--coal);
+}
+::selection {
+  background: rgba(214, 179, 118, 0.4);
+  color: var(--bone-ink);
+}
+.pe-dark,
+.skip-link {
+  color: var(--coal);
+}
+.oa-h1,
+.oa-tagline,
+.oa-head {
+  font-family: var(--display) !important;
+}
+.oa-h1 {
+  background: linear-gradient(90deg, #fefdf9 0%, #a8a295 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.oa-glow {
+  background: radial-gradient(circle, rgba(214, 179, 118, 0.3) 0%, rgba(214, 179, 118, 0.09) 45%, transparent 70%);
+}
+.oa-stage::before {
+  background: linear-gradient(90deg, transparent, rgba(214, 179, 118, 0.85), transparent);
+}
+.oa-steps li.is-on {
+  background: rgba(214, 179, 118, 0.07);
+  border-color: rgba(214, 179, 118, 0.35);
+}
+.oa-steps li.is-on .oa-step-n {
+  border-color: var(--sand);
+  color: var(--sand);
+}
+.oa-tier-knob {
+  background: var(--bone-ink);
+}
+/* Logo clear space: at least half the symbol's height on every side. */
+.oa-nav .oa-cobrand {
+  gap: 18px;
+}
