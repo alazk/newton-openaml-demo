@@ -463,7 +463,7 @@ function Console(props: {
               <a href={`${OPENAML_REPO_URL}/tree/${OPENAML_COMMIT}/Data`} target="_blank" rel="noreferrer" style={{ textDecoration: "underline", textUnderlineOffset: 3 }}>
                 OpenAML lists, commit {OPENAML_COMMIT.slice(0, 7)}
               </a>
-              . Apache 2.0.
+              . Apache 2.0. Screens the sender and the recipient of a native ETH transfer.
             </div>
           </div>
         </div>

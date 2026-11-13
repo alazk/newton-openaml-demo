@@ -125,6 +125,8 @@ const wasmCases = [
   ["null wasm_args", "null", { to: A.clean, from: SENDER }, BLOCK],
   ["garbage wasm_args", "{not json", { to: A.clean, from: SENDER }, BLOCK],
   ["no payer screened for a sender", JSON.stringify({ to: A.clean }), { to: A.clean, from: A.fraud }, BLOCK],
+  ["null sender on the intent", JSON.stringify({ to: A.clean }), { to: A.clean, from: null }, BLOCK],
+  ["numeric sender on the intent", JSON.stringify({ to: A.clean }), { to: A.clean, from: 7 }, BLOCK],
 ];
 for (const [name, args, input, params] of wasmCases) {
   let out;
@@ -141,6 +143,27 @@ for (const [name, args, input, params] of wasmCases) {
   console.log(`${ok ? "pass" : "FAIL"}  ${name.padEnd(32)} allow=${v.allow}  deny=${JSON.stringify(v.deny)}`);
 }
 
+// The submitter cannot choose where data comes from: extra fields are ignored.
+calls.length = 0;
+{
+  const out = run(JSON.stringify({ to: A.fraud, from: SENDER, hosts: ["https://evil.example/"], index_commit: "0".repeat(40), index_repo: "evil/fork" }));
+  const v = rego(out, BLOCK, { to: A.fraud, from: SENDER });
+  const fixed = calls.every((u) => ["raw.githubusercontent.com", "cdn.jsdelivr.net", "rawcdn.githack.com"].includes(new URL(u).host) && u.includes("/alazk/newton-openaml-demo") && !u.includes("0".repeat(40)));
+  const ok = v.allow === false && v.deny.includes("payee_fraud") && fixed;
+  if (!ok) failed++;
+  console.log(`${ok ? "pass" : "FAIL"}  ${"injected hosts are ignored".padEnd(32)} allow=${v.allow}  deny=${JSON.stringify(v.deny)}`);
+}
+
+// Intent with no sender at all still screens the payee.
+{
+  const out = run(JSON.stringify({ to: A.clean }));
+  const v = rego(out, BLOCK, { to: A.clean });
+  const v2 = rego(run(JSON.stringify({ to: A.fraud })), BLOCK, { to: A.fraud });
+  const ok = v.allow === true && v2.allow === false && v2.deny.includes("payee_fraud");
+  if (!ok) failed++;
+  console.log(`${ok ? "pass" : "FAIL"}  ${"no sender: payee still screened".padEnd(32)} allow=${v.allow}/${v2.allow}`);
+}
+
 // Two addresses in the same shard should fetch it once per host, not twice.
 mode = "ok";
 calls.length = 0;
@@ -149,5 +172,5 @@ const once = calls.length === 2;
 if (!once) failed++;
 console.log(`${once ? "pass" : "FAIL"}  ${"same shard fetched once".padEnd(32)} requests=${calls.length}`);
 
-console.log(failed ? `\n${failed} failed` : `\nall ${cases.length + wasmCases.length + 1} passed`);
+console.log(failed ? `\n${failed} failed` : `\nall ${cases.length + wasmCases.length + 3} passed`);
 process.exit(failed ? 1 : 0);

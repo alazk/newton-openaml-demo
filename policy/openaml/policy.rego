@@ -47,8 +47,11 @@ payee_screened if {
 	is_array(w.to.tiers)
 }
 
-# No sender on the intent: nothing to bind.
-payer_screened if not is_string(input.from)
+# No sender on the intent at all: nothing to bind. A sender that is present
+# but not a string (null, a number) is not "no sender", and denies.
+payer_screened if not has_sender
+
+has_sender if "from" in object.keys(input)
 
 payer_screened if {
 	is_string(input.from)

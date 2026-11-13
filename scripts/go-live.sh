@@ -9,7 +9,7 @@
 # Safe to run again: finished steps are recorded in policy/out/ and skipped.
 #
 #   1. checks the repo is on GitHub and the policy can read its data
-#   2. builds and simulates the policy (fraud must deny, clean must allow)
+#   2. builds and simulates the policy (clean must allow, fraud and flagged must deny)
 #   3. deploys the policy
 #   4. deploys the block and review clients (dry run first)
 #   5. runs the five real checks
@@ -81,18 +81,24 @@ else
   (
     cd policy
     newton-cli policy build -p ./openaml
-    echo; echo "    Fraud recipient (should DENY):"
-    newton-cli policy simulate -p ./openaml \
-      --wasm-args ./openaml/configs/wasm_args.fraud.json \
-      --intent-json ./openaml/configs/intent.fraud.json \
-      --policy-params-data ./openaml/configs/params.block.json
-    echo; echo "    Clean recipient (should ALLOW):"
+    # Clean first: a policy that denies everything would also "pass" the others.
+    echo; echo "    1. Clean recipient, block rule (should ALLOW):"
     newton-cli policy simulate -p ./openaml \
       --wasm-args ./openaml/configs/wasm_args.clean.json \
       --intent-json ./openaml/configs/intent.clean.json \
       --policy-params-data ./openaml/configs/params.block.json
+    echo; echo "    2. Fraud recipient, block rule (should DENY):"
+    newton-cli policy simulate -p ./openaml \
+      --wasm-args ./openaml/configs/wasm_args.fraud.json \
+      --intent-json ./openaml/configs/intent.fraud.json \
+      --policy-params-data ./openaml/configs/params.block.json
+    echo; echo "    3. Flagged recipient, review rule (should DENY):"
+    newton-cli policy simulate -p ./openaml \
+      --wasm-args ./openaml/configs/wasm_args.flagged.json \
+      --intent-json ./openaml/configs/intent.flagged.json \
+      --policy-params-data ./openaml/configs/params.review.json
   )
-  ask "Did fraud deny and clean allow?" || stop "the simulation did not match. Send Claude the output above."
+  ask "Did 1 allow, and 2 and 3 deny?" || stop "the simulation did not match. Send Claude the output above."
 
   step "3/6  Deploy the policy"
   (cd policy && newton-cli policy deploy -p ./openaml)

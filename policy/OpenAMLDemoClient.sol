@@ -2,9 +2,9 @@
 pragma solidity ^0.8.27;
 
 /**
- * Minimal Newton v0.7 PolicyClient for the OpenAML demo, copied from the
- * live sanctions demo client (policy/SanctionsDemoClient.sol in
- * alazk/newton-sanctions-demo). Two instances run: block and review.
+ * Minimal Newton v0.7 PolicyClient for the OpenAML demo, the audited client
+ * from the newton-sanctions-policy skill (two-step ownership, zero-address
+ * checks). Two instances run: block and review.
  *
  * The public newton-contracts repo lags the deployed 0.7 protocol. This
  * implements the v0.7 client interface as published in @newton-xyz/sdk 1.2.2
@@ -45,12 +45,14 @@ contract OpenAMLDemoClient {
 
     address private immutable _taskManager;
     address private _owner;
+    address private _pendingOwner;
     bytes32 private _policyId;
     uint64 private _revision;
     PolicySpec[] private _policies;
 
     event PolicyClientInitialized(address indexed taskManager, address indexed owner);
     event PolicyClientOwnerUpdated(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferStarted(address indexed owner, address indexed pendingOwner);
     event PoliciesUpdated(
         bytes32 indexed previousPolicyId, bytes32 indexed newPolicyId, uint64 revision, PolicySpec[] policies
     );
@@ -58,7 +60,8 @@ contract OpenAMLDemoClient {
     error OnlyPolicyClientOwner();
     error EmptyPolicySet();
     error ZeroExpireAfter(uint256 index);
-    error ZeroOwner();
+    error OnlyPendingOwner();
+    error ZeroAddress();
 
     modifier onlyOwner() {
         if (msg.sender != _owner) revert OnlyPolicyClientOwner();
@@ -66,6 +69,7 @@ contract OpenAMLDemoClient {
     }
 
     constructor(address taskManager, address owner_) {
+        if (taskManager == address(0) || owner_ == address(0)) revert ZeroAddress();
         _taskManager = taskManager;
         _owner = owner_;
         emit PolicyClientInitialized(taskManager, owner_);
@@ -81,6 +85,10 @@ contract OpenAMLDemoClient {
 
     function getOwner() external view returns (address) {
         return _owner;
+    }
+
+    function pendingOwner() external view returns (address) {
+        return _pendingOwner;
     }
 
     function getPolicyId() external view returns (bytes32) {
@@ -123,11 +131,19 @@ contract OpenAMLDemoClient {
         emit PoliciesUpdated(previous, policyId, revision, policies);
     }
 
+    /// Step 1 of 2: the current owner names the next owner.
     function setPolicyClientOwner(address newOwner) external onlyOwner {
-        // Audit fix from the sanctions demo: a zero owner would lock the client for good.
-        if (newOwner == address(0)) revert ZeroOwner();
-        emit PolicyClientOwnerUpdated(_owner, newOwner);
-        _owner = newOwner;
+        if (newOwner == address(0)) revert ZeroAddress();
+        _pendingOwner = newOwner;
+        emit OwnershipTransferStarted(_owner, newOwner);
+    }
+
+    /// Step 2 of 2: the named owner accepts, so a typo cannot lock the policy set.
+    function acceptOwnership() external {
+        if (msg.sender != _pendingOwner) revert OnlyPendingOwner();
+        emit PolicyClientOwnerUpdated(_owner, msg.sender);
+        _owner = msg.sender;
+        _pendingOwner = address(0);
     }
 
     function version() external pure returns (string memory) {

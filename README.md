@@ -62,7 +62,7 @@ npm install
 node scripts/check-consistency.mjs          # pins, samples and counts agree
 node --experimental-strip-types scripts/test-outcome.mjs   # outcome and fail-closed rules
 cargo install regorus --example regorus --root ./regorus-bin
-REGORUS=./regorus-bin/bin/regorus node policy/openaml/test/run.mjs   # 33 policy cases
+REGORUS=./regorus-bin/bin/regorus node policy/openaml/test/run.mjs   # 37 policy cases
 node scripts/compile-client.mjs             # interface id 0xf67e14d6
 npm i --no-save ganache @newton-xyz/sdk@1.2.2 && node scripts/rehearse-deploy.mjs
 ```
@@ -80,8 +80,8 @@ bash scripts/go-live.sh
 
 It runs every step in order and stops at the first problem: checks the index is
 served from GitHub and jsDelivr, asks for the owner key and Newton API key
-without showing them, builds and simulates the policy (fraud must deny, clean
-must allow), deploys it, deploys the two clients after a dry run, runs the five
+without showing them, builds and simulates the policy (clean must allow, fraud
+and flagged must deny), deploys it, deploys the two clients after a dry run, runs the five
 fixtures in `scripts/task-test.mjs`, sets the Vercel env vars and deploys the
 site. Finished steps are recorded in `policy/out/` and skipped on a rerun.
 
