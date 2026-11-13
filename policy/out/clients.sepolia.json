@@ -26,5 +26,189 @@
     "policyId": "0x33dfd7d3cef18d5c63564dab11cf9e598f7005809966ae14a141fc2882f05403",
     "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
     "deployedAt": "2026-11-13T12:04:38.958Z"
+  },
+  "sanctioned": {
+    "address": "0xce542d7C2A3e88A0C888bc395f9d08c393bfA3FC",
+    "params": {
+      "deny_tiers": [
+        "sanctioned"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0xa9597b4d8c2511e5415ed514b4376666f410b40b94cb46402fe6f474565492b9",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:43:16.086Z"
+  },
+  "blocked": {
+    "address": "0x8Fbf2D2697809D197852A38222cF4E706E31C30E",
+    "params": {
+      "deny_tiers": [
+        "blocked"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x095e3a1621f5cd8c8f457013c82a6121c04b4a63bc9c5ba43756f8a9c6aeb847",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:43:40.774Z"
+  },
+  "sanctioned+blocked": {
+    "address": "0xD05821c63061163881cdD181bf06d736F84877aB",
+    "params": {
+      "deny_tiers": [
+        "sanctioned",
+        "blocked"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x3a87a76cd927a9451d3572571d8d3132d18570ce0be41672f9f8d2b014a95ae1",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:44:01.408Z"
+  },
+  "fraud": {
+    "address": "0x3942D0B6dE3438Ce75Ad1991498B090626086FA0",
+    "params": {
+      "deny_tiers": [
+        "fraud"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x2ffafbe9937d0b2595f14ab4223e2688cbc9a23972cff0c12e64ae8aba4fb21f",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:44:26.295Z"
+  },
+  "sanctioned+fraud": {
+    "address": "0xc5478512c3d89f21175EBB8421684FAe3Bd3D815",
+    "params": {
+      "deny_tiers": [
+        "sanctioned",
+        "fraud"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x97f95385ced927ea7e0dbf37ab06ed09b0740fb13cd2d20239486f161922a68c",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:44:50.955Z"
+  },
+  "blocked+fraud": {
+    "address": "0x93E98F254A8d1dD2137BA41C27ee8c15f0DaA291",
+    "params": {
+      "deny_tiers": [
+        "blocked",
+        "fraud"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x674c0f146544fee63988390e822a1e2c7ef84e9494c878426ff2c8f1d61cac18",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:45:27.854Z"
+  },
+  "sanctioned+flagged": {
+    "address": "0x2BCF91a240c3fa9A7D79715192229b98d6790CD2",
+    "params": {
+      "deny_tiers": [
+        "sanctioned",
+        "flagged"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0xcc9808ed88e3fae2d1a0b9f8077ffd736b225b24db264f52113e22424896b0c1",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:45:52.544Z"
+  },
+  "blocked+flagged": {
+    "address": "0xDFdF23F72EE06D9F9d9e543208Ad42CBCD03540C",
+    "params": {
+      "deny_tiers": [
+        "blocked",
+        "flagged"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0xe0dec0e2d6c8ce00fb4d718205660162623e0283dd9e0760af607fd49d4e652d",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:46:29.475Z"
+  },
+  "sanctioned+blocked+flagged": {
+    "address": "0x32E32e8bEc04b4cEe2cc767FEA6393B606A89Aab",
+    "params": {
+      "deny_tiers": [
+        "sanctioned",
+        "blocked",
+        "flagged"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0xd5c57c972594756eb6e61d2ed2d6a1baf9fd9e75c4b1ed16507a5f1d9cde9843",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:46:50.216Z"
+  },
+  "fraud+flagged": {
+    "address": "0xE90F3c7534C0a94B59b29E98E18503Ad84E98eed",
+    "params": {
+      "deny_tiers": [
+        "fraud",
+        "flagged"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x029a0e13b8310e57ecef9de72537f942c11bfe1350e530a2f4c9c1dfb0b7e332",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:47:14.863Z"
+  },
+  "sanctioned+fraud+flagged": {
+    "address": "0x11310ab0a8E403a53341A29FcF517d07e0BA8523",
+    "params": {
+      "deny_tiers": [
+        "sanctioned",
+        "fraud",
+        "flagged"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x7c791bb025696cb82da18b242d67f2e26ef98c1e0ec2702384526bd901745b5f",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:47:39.536Z"
+  },
+  "blocked+fraud+flagged": {
+    "address": "0xDE23D0e12e86556fd827879B19D360d197B89AE7",
+    "params": {
+      "deny_tiers": [
+        "blocked",
+        "fraud",
+        "flagged"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0x3dc2885edc593728832aa97119eeb456c9efbf0b740d13b9b65ee76e8643cbf7",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:48:04.187Z"
+  },
+  "sanctioned+blocked+fraud+flagged": {
+    "address": "0x1fe173D2DC06a575d0765114E84e4B5B0a30Bb8B",
+    "params": {
+      "deny_tiers": [
+        "sanctioned",
+        "blocked",
+        "fraud",
+        "flagged"
+      ]
+    },
+    "policy": "0x395A67b71db090f1F36b93F2df00Da3c0F9e5995",
+    "expireAfter": 300,
+    "policyId": "0xb5eb1763ac687f4ab1b20640f05e0c7781d6fbded1accd8a1cee7e87f03785a9",
+    "owner": "0x8b4bA8708239757e84aD26a503500Bc5fC1c1a48",
+    "deployedAt": "2026-11-13T12:48:40.965Z"
   }
 }
